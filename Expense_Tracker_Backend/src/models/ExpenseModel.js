@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
-const schema = mongoose.Schema
+const Schema = mongoose.Schema
 
-const ExpenseSchema = new schema({
+const expenseSchema = new Schema({
     title:{
         type:String
     },
@@ -30,5 +30,5 @@ const ExpenseSchema = new schema({
         type:String,
         enum:["UPI","CASH","CARD","CHECK","EMI"]
     },
-})
-module.exports = mongoose.model("expense",ExpenseSchema)
+},{timestamps:true})
+module.exports = mongoose.model("expense",expenseSchema)

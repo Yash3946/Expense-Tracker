@@ -21,6 +21,16 @@ const createExpenseCategory = async(req,res)=>{
 
 
 }
+
+const getExpensecategoriesByUserId = async(req,res)=>{
+
+    const userId = req.user._id;
+    const categories = await expCategory.find({userId:userId})
+    res.status(200).json({
+        data:categories
+    })
+
+}
 module.exports = {
-    createExpenseCategory
+    createExpenseCategory,getExpensecategoriesByUserId
 }
