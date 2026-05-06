@@ -91,7 +91,7 @@ export const MyExpenses = () => {
                   <div>
                     <label>Search</label>
                     <input type="text" onChange={(e)=>{searchHanlder(e)}}></input>
-                    </div>
+                    </div> 
 
                   <div>
                      <label>Search amount</label>
