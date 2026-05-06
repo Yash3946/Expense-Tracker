@@ -1,0 +1,98 @@
+const expenseSchema = require("../models/ExpenseModel")
+
+const createExpense = async(req,res)=>{
+
+
+    try{
+
+        const userId = req.user._id;
+        const savedExpense = await expenseSchema.create({...req.body,userId:userId})
+        res.status(201).json({
+            message:"expense created..",
+            data:savedExpense
+        })
+
+
+    }catch(err){
+
+        res.status(500).json({
+            message:"error while creating expense.."
+        })
+    }
+
+
+}
+const getExpesneByUserId = async(req,res)=>{
+
+    const userId = req.user._id;
+    const expenses = await expenseSchema.find({userId:userId})
+    res.status(200).json({
+        message:"expense",
+        data:expenses
+    })
+}
+const deleteExpense = async(req,res)=>{
+    try{
+        const userId = req.user._id;
+        const id = req.params.id;
+        const expense = await expenseSchema.findOne({_id:id,userId:userId});
+        if(!expense){
+            return res.status(404).json({
+                message:"expense not found"
+            })
+        }
+        await expenseSchema.deleteOne({_id:id,userId:userId});
+        res.status(200).json({
+            message:"expense deleted",
+            data:expense
+        })
+    }catch(err){
+        res.status(500).json({
+            message:"error while deleting expense"
+        })
+    }
+}
+const searchExp = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const expName = req.query.expName || "";
+        let expAmount = req.query.expAmount || "";
+
+        if (expAmount) {
+            expAmount = parseInt(expAmount);
+        }
+
+        let query = { userId };
+
+        if (expName) {
+            query.$or = [
+                { title: { $regex: expName, $options: "i" } },
+                { description: { $regex: expName, $options: "i" } }
+            ];
+        }
+
+        if (expAmount) {
+            query.amount = expAmount; // ✅ separate filter
+        }
+
+        const foundexp = await expenseSchema.find(query).populate("expCat");
+
+        res.json({
+            message: "search successful",
+            data: foundexp
+        });
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            message: "error while searching expense"
+        });
+    }
+};
+
+module.exports={
+    createExpense,
+    getExpesneByUserId,
+    deleteExpense,
+    searchExp
+}
