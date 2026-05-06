@@ -2,7 +2,7 @@ const userSchema = require("../models/UserModel")
 const bcrypt = require("bcrypt")
 const mailSend = require("../utils/MailUtil")
 const jwt = require("jsonwebtoken")
-const secret = "secret"
+const secret = "secret" 
 
 const createUser = async (req, res) => {
 
