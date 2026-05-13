@@ -3,104 +3,220 @@ import { useForm } from 'react-hook-form'
 import axios from '../api/axiosInstance'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { ArrowLeft, FolderPlus } from 'lucide-react'
 
 export const AddCategory = () => {
 
-  const { register, handleSubmit } = useForm()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset
+  } = useForm()
+
   const navigate = useNavigate()
 
+  // =========================
+  // SUBMIT
+  // =========================
   const submitHandler = async (data) => {
-    try {
-      const res = await axios.post("/expCat/", data)
 
-      if (res.status === 201) {
-        toast.success("Category added successfully ✅")
-        setTimeout(() => {
-          navigate("/my-categories")
-        }, 1200)
+    try {
+
+      console.log("data...", data)
+
+      // EXPENSE
+      if (data.type === "expense") {
+
+        const res = await axios.post("/expCat/", data)
+
+        console.log(res)
+
+        toast.success("Expense category added ✅")
       }
 
+      // INCOME
+      if (data.type === "income") {
+
+        const res = await axios.post("/incomeCat/", data)
+
+        console.log(res)
+
+        toast.success("Income category added ✅")
+      }
+
+      reset()
+
+      // NAVIGATE
+      navigate("/my-categories")
+
     } catch (err) {
-      toast.error("Error adding category ❌")
+
+      console.log(err)
+
+      toast.error("Failed to add category ❌")
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#080b14] flex items-center justify-center px-4 py-10 relative overflow-hidden">
 
-      {/* Background Grid */}
-      <div className="absolute inset-0 opacity-5"
+    <div className="min-h-screen bg-[#050816] flex items-center justify-center px-4 py-10 relative overflow-hidden">
+
+      {/* GRID */}
+      <div
+        className="absolute inset-0 opacity-5"
         style={{
-          backgroundImage: 'linear-gradient(#6366f1 1px,transparent 1px),linear-gradient(90deg,#6366f1 1px,transparent 1px)',
+          backgroundImage:
+            'linear-gradient(#6366f1 1px,transparent 1px),linear-gradient(90deg,#6366f1 1px,transparent 1px)',
           backgroundSize: '40px 40px'
         }}
       />
 
-      {/* Glow Orbs */}
-      <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full"
-        style={{ background: 'radial-gradient(circle,rgba(99,102,241,0.18) 0%,transparent 70%)' }} />
-
-      <div className="absolute -bottom-16 -right-10 w-64 h-64 rounded-full"
-        style={{ background: 'radial-gradient(circle,rgba(168,85,247,0.12) 0%,transparent 70%)' }} />
-
-      {/* Card */}
-      <div className="w-full max-w-xl relative z-10"
+      {/* GLOW */}
+      <div
+        className="absolute -top-20 -left-20 w-96 h-96 rounded-full blur-3xl"
         style={{
-          background: 'rgba(15,19,35,0.85)',
-          border: '1px solid rgba(99,102,241,0.2)',
-          borderRadius: 24,
-          padding: '36px',
-          backdropFilter: 'blur(12px)'
+          background:
+            'radial-gradient(circle,rgba(99,102,241,0.25),transparent 70%)'
+        }}
+      />
+
+      <div
+        className="absolute -bottom-20 -right-20 w-96 h-96 rounded-full blur-3xl"
+        style={{
+          background:
+            'radial-gradient(circle,rgba(168,85,247,0.20),transparent 70%)'
+        }}
+      />
+
+      {/* CARD */}
+      <div
+        className="w-full max-w-xl relative z-10 p-8 rounded-3xl border border-slate-800 backdrop-blur-xl shadow-2xl"
+        style={{
+          background: 'rgba(10,14,28,0.88)'
         }}
       >
 
-        {/* Header */}
-        <div className="mb-7 text-center">
-          <h1 className="text-3xl font-extrabold text-white">
+        {/* BACK BUTTON */}
+        <button
+          onClick={() => navigate("/my-categories")}
+          className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-6"
+        >
+          <ArrowLeft size={18} />
+          Back to Categories
+        </button>
+
+        {/* HEADER */}
+        <div className="text-center mb-8">
+
+          <div className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-5"
+            style={{
+              background:
+                'linear-gradient(135deg,#4f46e5,#7c3aed)'
+            }}
+          >
+            <FolderPlus size={38} className="text-white" />
+          </div>
+
+          <h1 className="text-4xl font-extrabold text-white mb-2">
             Add <span className="text-indigo-400">Category</span>
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Organize your expenses
+
+          <p className="text-slate-500">
+            Create expense & income categories beautifully
           </p>
+
         </div>
 
-        <form onSubmit={handleSubmit(submitHandler)} className="space-y-6">
+        {/* FORM */}
+        <form
+          onSubmit={handleSubmit(submitHandler)}
+          className="space-y-6"
+        >
 
-          {/* Name */}
+          {/* CATEGORY TYPE */}
           <div>
-            <label className="block text-xs text-slate-400 mb-2">
+
+            <label className="block text-sm text-slate-300 mb-2">
+              Category Type
+            </label>
+
+            <select
+              {...register("type", {
+                required: {
+                  value: true,
+                  message: "Please select category type"
+                }
+              })}
+              className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">-- Select Type --</option>
+              <option value="expense">EXPENSE</option>
+              <option value="income">INCOME</option>
+            </select>
+
+            {errors.type && (
+              <p className="text-red-400 text-sm mt-2">
+                {errors.type.message}
+              </p>
+            )}
+
+          </div>
+
+          {/* CATEGORY NAME */}
+          <div>
+
+            <label className="block text-sm text-slate-300 mb-2">
               Category Name
             </label>
 
             <input
               type="text"
-              {...register("catName", { required: true })}
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Enter category name..."
+              {...register("catName", {
+                required: "Category name is required"
+              })}
+              className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-2xl text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
+
+            {errors.catName && (
+              <p className="text-red-400 text-sm mt-2">
+                {errors.catName.message}
+              </p>
+            )}
+
           </div>
 
-          {/* Description */}
+          {/* DESCRIPTION */}
           <div>
-            <label className="block text-xs text-slate-400 mb-2">
+
+            <label className="block text-sm text-slate-300 mb-2">
               Description
             </label>
 
-            <input
-              type="text"
+            <textarea
+              rows={4}
+              placeholder="Write description..."
               {...register("description")}
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-2xl text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
             />
+
           </div>
 
-          {/* Button */}
+          {/* BUTTON */}
           <button
             type="submit"
-            className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 transition-all text-white font-semibold rounded-xl shadow-lg"
+            className="w-full py-4 rounded-2xl text-white font-bold text-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl"
+            style={{
+              background:
+                'linear-gradient(135deg,#4f46e5,#7c3aed)'
+            }}
           >
-            Add Category
+            Add Category 🚀
           </button>
 
         </form>
+
       </div>
     </div>
   )

@@ -39,8 +39,6 @@ export const Report1 = () => {
 
       if (res.data && Array.isArray(res.data.data)) {
 
-        // PAYMENT MODE TOTAL
-
         const paymentData = {
           CASH: 0,
           CARD: 0,
