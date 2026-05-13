@@ -7,7 +7,9 @@ import { toast } from 'react-toastify'
 export const AddExpense = () => {
 
   const { register, handleSubmit } = useForm()
+
   const [categories, setCategories] = useState([])
+  const [selectedFile, setSelectedFile] = useState("")
   const navigate = useNavigate()
 
   const getMyCategories = async () => {
@@ -24,134 +26,227 @@ export const AddExpense = () => {
   }, [])
 
   const submitHandler = async (data) => {
+
     try {
+
       const res = await axiosInstance.post("/exp/", data)
+
       if (res.status === 201) {
-        toast.success("Expense added successfully ✅")
-        setTimeout(() => navigate("/my-expenses"), 1000)
+
+        // FILE UPLOAD
+        if (selectedFile) {
+
+          const formData = new FormData()
+
+          formData.append("expId", res.data.data._id)
+          formData.append("receipt", selectedFile)
+
+          const res2 = await axiosInstance.put(
+            "/exp/uploadreceipt",
+            formData
+          )
+
+          if (res2.status === 200) {
+            toast.success("Expense added with receipt ✅")
+            navigate("/my-expenses")
+          } else {
+            toast.warning("Expense added but receipt failed ⚠️")
+            navigate("/my-expenses")
+          }
+
+        } else {
+          toast.success("Expense added successfully ✅")
+          navigate("/my-expenses")
+        }
       }
+
     } catch (err) {
-      toast.error(err.response?.data?.message || "Error ❌")
+      toast.error(err.response?.data?.message || "Something went wrong ❌")
     }
   }
 
   return (
     <>
-      {/* 🔥 CSS inside component */}
+      {/* INTERNAL CSS */}
       <style>{`
-        .label {
-          display: block;
-          font-size: 13px;
-          color: #cbd5f5;
-          margin-bottom: 6px;
+        .glassCard {
+          background: rgba(15, 23, 42, 0.75);
+          border: 1px solid rgba(99,102,241,0.15);
+          backdrop-filter: blur(12px);
         }
 
-        .inputStyle {
-          width: 100%;
-          padding: 12px 14px;
-          background: rgba(30, 41, 59, 0.9);
-          border: 1px solid rgba(71, 85, 105, 0.6);
-          border-radius: 10px;
-          color: #f1f5f9;
+        .inputField {
+          background: rgba(15,23,42,0.5);
+          border: 1px solid rgba(99,102,241,0.2);
+          color: white;
+          transition: all 0.3s ease;
+        }
+
+        .inputField:focus {
           outline: none;
-          transition: all 0.2s ease;
-        }
-
-        .inputStyle::placeholder {
-          color: #94a3b8;
-        }
-
-        .inputStyle:focus {
           border-color: #818cf8;
-          box-shadow: 0 0 0 2px rgba(129,140,248,0.3);
-          background: rgba(30, 41, 59, 1);
+          box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+        }
+
+        .submitBtn {
+          background: linear-gradient(135deg,#6366f1,#4f46e5);
+        }
+
+        .submitBtn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(99,102,241,0.4);
         }
       `}</style>
 
       <div
-        className="min-h-screen flex items-center justify-center px-4 py-12"
+        className="min-h-screen px-4 py-12 text-white flex items-center justify-center"
         style={{
-          background: 'linear-gradient(135deg, #020617, #0f172a, #020617)'
+          background: 'linear-gradient(135deg,#020617,#0f172a,#020617)'
         }}
       >
 
-        <div
-          className="w-full max-w-2xl rounded-2xl p-8 border shadow-xl"
-          style={{
-            background: 'rgba(15, 23, 42, 0.75)',
-            border: '1px solid rgba(99,102,241,0.2)',
-            backdropFilter: 'blur(14px)'
-          }}
-        >
+        <div className="glassCard w-full max-w-3xl rounded-3xl p-8">
 
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white">
+          {/* HEADER */}
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold">
               Add <span className="text-indigo-400">Expense</span>
             </h1>
+
             <p className="text-slate-400 text-sm mt-2">
-              Track your spending efficiently
+              Track your spending smartly 💸
             </p>
           </div>
 
-          <div className="h-px mb-8 bg-gradient-to-r from-indigo-500/20 to-transparent"></div>
+          {/* FORM */}
+          <form
+            onSubmit={handleSubmit(submitHandler)}
+            className="space-y-6"
+          >
 
-          <form onSubmit={handleSubmit(submitHandler)} className="space-y-6">
+            {/* TITLE */}
+            <div>
+              <label className="text-sm text-slate-300 mb-2 block">
+                Expense Title
+              </label>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="label">Title</label>
-                <input {...register("title")} placeholder="e.g. Grocery" className="inputStyle" />
-              </div>
-
-              <div>
-                <label className="label">Amount</label>
-                <input type="number" {...register("amount")} placeholder="₹ 500" className="inputStyle" />
-              </div>
+              <input
+                type="text"
+                placeholder="Enter expense title"
+                {...register("title")}
+                className="inputField w-full px-4 py-3 rounded-xl"
+              />
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            {/* DESCRIPTION */}
+            <div>
+              <label className="text-sm text-slate-300 mb-2 block">
+                Description
+              </label>
+
+              <textarea
+                rows="3"
+                placeholder="Expense details..."
+                {...register("description")}
+                className="inputField w-full px-4 py-3 rounded-xl"
+              />
+            </div>
+
+            {/* AMOUNT + DATE */}
+            <div className="grid md:grid-cols-2 gap-5">
+
               <div>
-                <label className="label">Expense Date</label>
-                <input type="date" {...register("expenseDate")} className="inputStyle" />
+                <label className="text-sm text-slate-300 mb-2 block">
+                  Amount
+                </label>
+
+                <input
+                  type="number"
+                  placeholder="Enter amount"
+                  {...register("amount")}
+                  className="inputField w-full px-4 py-3 rounded-xl"
+                />
               </div>
 
               <div>
-                <label className="label">Category</label>
-                <select {...register("expCat")} className="inputStyle">
+                <label className="text-sm text-slate-300 mb-2 block">
+                  Expense Date
+                </label>
+
+                <input
+                  type="date"
+                  {...register("expenseDate")}
+                  className="inputField w-full px-4 py-3 rounded-xl"
+                />
+              </div>
+
+            </div>
+
+            {/* CATEGORY + PAYMENT */}
+            <div className="grid md:grid-cols-2 gap-5">
+
+              <div>
+                <label className="text-sm text-slate-300 mb-2 block">
+                  Category
+                </label>
+
+                <select
+                  {...register("expCat")}
+                  className="inputField w-full px-4 py-3 rounded-xl"
+                >
                   <option value="">Select Category</option>
-                  {categories.map(cat => (
-                    <option key={cat._id} value={cat._id}>
+
+                  {categories?.map((cat) => (
+                    <option
+                      key={cat._id}
+                      value={cat._id}
+                    >
                       {cat.catName}
                     </option>
                   ))}
+
                 </select>
               </div>
+
+              <div>
+                <label className="text-sm text-slate-300 mb-2 block">
+                  Payment Mode
+                </label>
+
+                <select
+                  {...register("paymentMode")}
+                  className="inputField w-full px-4 py-3 rounded-xl"
+                >
+                  <option value="CASH">Cash</option>
+                  <option value="CARD">Card</option>
+                  <option value="UPI">UPI</option>
+                  <option value="CHEQUE">Cheque</option>
+                </select>
+              </div>
+
             </div>
 
+            {/* FILE */}
             <div>
-              <label className="label">Description</label>
-              <input {...register("description")} placeholder="Optional note..." className="inputStyle" />
+              <label className="text-sm text-slate-300 mb-2 block">
+                Upload Receipt
+              </label>
+
+              <input
+                type="file"
+                onChange={(event) => {
+                  setSelectedFile(event.target.files[0])
+                }}
+                className="inputField w-full px-4 py-3 rounded-xl"
+              />
             </div>
 
-            <div>
-              <label className="label">Payment Mode</label>
-              <select {...register("paymentMode")} className="inputStyle">
-                <option value="CASH">Cash</option>
-                <option value="CARD">Card</option>
-                <option value="UPI">UPI</option>
-                <option value="CHEQUE">Cheque</option>
-              </select>
-            </div>
-
+            {/* BUTTON */}
             <button
               type="submit"
-              className="w-full py-3 mt-4 rounded-xl font-semibold text-white transition-all"
-              style={{
-                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)'
-              }}
+              className="submitBtn w-full py-3 rounded-xl font-semibold text-white transition-all duration-300"
             >
-              + Add Expense
+              Add Expense
             </button>
 
           </form>

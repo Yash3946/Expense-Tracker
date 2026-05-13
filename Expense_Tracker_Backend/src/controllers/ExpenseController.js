@@ -25,7 +25,15 @@ const createExpense = async(req,res)=>{
 const getExpesneByUserId = async(req,res)=>{
 
     const userId = req.user._id;
-    const expenses = await expenseSchema.find({userId:userId})
+    var sort = req.query.sort || 1;
+    sort = parseInt(sort);
+    var datesort = req.query.date || 1
+    datesort = parseInt(datesort);
+    console.log(datesort)
+    const expenses = await expenseSchema.find({userId:userId}).populate("expCat").sort({amount:sort,expenseDate:datesort})
+    console.log(
+            expenses.map(e => e.expenseDate)
+        );
     res.status(200).json({
         message:"expense",
         data:expenses
@@ -89,10 +97,25 @@ const searchExp = async (req, res) => {
         });
     }
 };
+const uploadReceipt = async(req,res)=>{
+
+    const expId = req.body.expId;
+    const file = req.file;
+    //clodudiary upload --> req.file.path
+    //return cloudinaryResponse --> secure_url
+    const updateExp = await expenseSchema.findByIdAndUpdate(expId,{expReceipt:file.path})
+    res.status(200).json({
+        message:"receipt uploaded successfully",
+        data:updateExp
+    })
+
+
+}
 
 module.exports={
     createExpense,
     getExpesneByUserId,
     deleteExpense,
-    searchExp
+    searchExp,
+    uploadReceipt
 }

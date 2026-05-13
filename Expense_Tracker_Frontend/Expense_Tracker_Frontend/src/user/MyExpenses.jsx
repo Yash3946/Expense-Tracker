@@ -1,79 +1,128 @@
 import React, { useEffect, useState } from 'react'
 import axiosInstance from '../api/axiosInstance'
+import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 export const MyExpenses = () => {
 
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [sort, setSort] = useState(1)
+  const [dateSort, setDateSort] = useState(1)
 
   const getMyExpenses = async () => {
+
     try {
-      const res = await axiosInstance.get("/exp/expbyuserid")
+
+      const res = await axiosInstance.get(
+        `/exp/expbyuserid?sort=${sort}&date=${dateSort}`
+      )
+
       setExpenses(res.data.data)
-    } catch {
+
+    } catch (err) {
+
+      console.error(err)
       toast.error("Failed to load expenses ❌")
+
     } finally {
       setLoading(false)
     }
   }
- const searchHanlder=async(e)=>{
-        console.log(e.target.value)
-        const res = await axiosInstance.get("/exp/search?expName="+e.target.value)
-        console.log(res.data.data) //sa -->[]
-        setExpenses(res.data.data) //replace with search data [1]
-        
-        
-    }
 
-    const searchHanlder1=async(e)=>{
-        console.log(e.target.value)
-        const res = await axiosInstance.get("/exp/search1?expAmount="+e.target.value)
-        console.log(res.data.data) //sa -->[]
-        setExpenses(res.data.data) //replace with search data [1]
-        
-        
-    }
-
-  useEffect(() => {
-    getMyExpenses()
-  }, [])
-
+  // DELETE EXPENSE
   const deleteExpense = async (id) => {
-    const confirmDelete = window.confirm("Delete this expense?")
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this expense?"
+    )
+
     if (!confirmDelete) return
 
     try {
+
       await axiosInstance.delete(`/exp/delete/${id}`)
-      setExpenses(prev => prev.filter(ex => ex._id !== id))
-      toast.success("Deleted successfully ✅")
-    } catch {
+
+      setExpenses((prev) =>
+        prev.filter((exp) => exp._id !== id)
+      )
+
+      toast.success("Expense deleted successfully ✅")
+
+    } catch (err) {
+
+      console.error(err)
+
       toast.error("Delete failed ❌")
     }
   }
 
+  const searchHanlder = async (e) => {
+
+    try {
+
+      const res = await axiosInstance.get(
+        "/exp/search?expName=" + e.target.value
+      )
+
+      setExpenses(res.data.data)
+
+    } catch {
+
+      toast.error("Search failed ❌")
+    }
+  }
+
+  useEffect(() => {
+    getMyExpenses()
+  }, [sort, dateSort])
+
   return (
     <>
-      {/* 🔥 INTERNAL CSS */}
+      {/* INTERNAL CSS */}
       <style>{`
-        .card {
+        .glassTable {
           background: rgba(15, 23, 42, 0.75);
           border: 1px solid rgba(99,102,241,0.15);
           backdrop-filter: blur(12px);
-          transition: all 0.3s ease;
         }
 
-        .card:hover {
-          transform: translateY(-5px) scale(1.02);
-          box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        .tableRow {
+          transition: all 0.25s ease;
         }
 
-        .deleteBtn {
-          background: linear-gradient(135deg,#ef4444,#dc2626);
+        .tableRow:hover {
+          background: rgba(99,102,241,0.08);
+          transform: scale(1.01);
         }
 
-        .deleteBtn:hover {
-          box-shadow: 0 8px 20px rgba(239,68,68,0.4);
+        .searchInput {
+          background: rgba(15,23,42,0.6);
+          border: 1px solid rgba(99,102,241,0.2);
+          color: white;
+        }
+
+        .searchInput:focus {
+          outline: none;
+          border-color: #818cf8;
+          box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+        }
+
+        .sortBtn {
+          transition: all 0.2s ease;
+        }
+
+        .sortBtn:hover {
+          color: #818cf8;
+          transform: scale(1.15);
+        }
+
+        .deleteBtn{
+          transition: all .2s ease;
+        }
+
+        .deleteBtn:hover{
+          transform: scale(1.08);
         }
       `}</style>
 
@@ -86,99 +135,247 @@ export const MyExpenses = () => {
 
         <div className="max-w-7xl mx-auto">
 
-          {/* Header */}
-          <div className="flex justify-between items-center mb-10 flex-wrap gap-3">
-                  <div>
-                    <label>Search</label>
-                    <input type="text" onChange={(e)=>{searchHanlder(e)}}></input>
-                    </div> 
-
-                  <div>
-                     <label>Search amount</label>
-                      <input type="number" onChange={(e)=>{searchHanlder1(e)}}></input>
-                      </div>
-
+          {/* HEADER */}
+          <div className="flex justify-between items-center flex-wrap gap-4 mb-8">
 
             <div>
+
               <h1 className="text-3xl font-bold">
                 My <span className="text-indigo-400">Expenses</span>
               </h1>
-              <p className="text-slate-400 text-sm">
-                Track and manage your spending
+
+              <p className="text-slate-400 text-sm mt-1">
+                Manage and track your spending 💸
               </p>
+
             </div>
 
-            <div className="px-4 py-1 rounded-full text-sm border"
+            <div
+              className="px-4 py-1 rounded-full text-sm border"
               style={{
                 background: 'rgba(99,102,241,0.1)',
                 borderColor: 'rgba(99,102,241,0.3)',
                 color: '#a5b4fc'
-              }}>
+              }}
+            >
               Total: {expenses.length}
             </div>
 
           </div>
 
-          {/* States */}
-          {loading ? (
-            <p className="text-center text-slate-400">Loading...</p>
-          ) : expenses.length === 0 ? (
-            <p className="text-center text-slate-500">No expenses found</p>
-          ) : (
+          {/* SEARCH */}
+          <div className="mb-6">
 
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <label className="block mb-2 text-sm text-slate-300">
+              Search Expense
+            </label>
 
-              {expenses.map(ex => (
-                <div key={ex._id}
-                  className="card p-5 rounded-2xl">
+            <input
+              type="text"
+              placeholder="Search by expense name..."
+              onChange={(e) => searchHanlder(e)}
+              className="searchInput w-full md:w-96 px-4 py-3 rounded-xl"
+            />
 
-                  {/* Title */}
-                  <h2 className="text-lg font-semibold text-indigo-400">
-                    {ex.title}
-                  </h2>
+          </div>
 
-                  {/* Description */}
-                  <p className="text-slate-400 text-sm mt-1">
-                    {ex.description || "No description"}
-                  </p>
+          {/* TABLE */}
+          <div className="glassTable rounded-3xl overflow-hidden shadow-2xl">
 
-                  {/* Amount */}
-                  <p className="text-emerald-400 font-bold text-lg mt-3">
-                    ₹{ex.amount}
-                  </p>
+            <div className="overflow-x-auto">
 
-                  {/* Date */}
-                  <p className="text-xs text-slate-500 mt-1">
-                    {new Date(ex.expenseDate).toLocaleDateString()}
-                  </p>
+              <table className="w-full">
 
-                  {/* Tags */}
-                  <div className="flex justify-between mt-4 text-xs">
+                {/* TABLE HEAD */}
+                <thead
+                  className="border-b border-slate-800"
+                  style={{
+                    background: 'rgba(15,23,42,0.9)'
+                  }}
+                >
 
-                    <span className="px-2 py-1 rounded bg-slate-800 text-indigo-300 border border-slate-700">
-                      {ex.expCat?.catName || "No Category"}
-                    </span>
+                  <tr className="text-left text-slate-300 text-sm uppercase">
 
-                    <span className="px-2 py-1 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                      {ex.paymentMode}
-                    </span>
+                    <th className="px-6 py-5">Title</th>
 
-                  </div>
+                    <th className="px-6 py-5">Description</th>
 
-                  {/* Delete */}
-                  <button
-                    onClick={() => deleteExpense(ex._id)}
-                    className="deleteBtn mt-4 w-full py-2 rounded-lg text-sm font-semibold text-white transition"
-                  >
-                    Delete
-                  </button>
+                    <th className="px-6 py-5">
 
-                </div>
-              ))}
+                      <div className="flex items-center gap-2">
+
+                        Amount
+
+                        <button
+                          className="sortBtn"
+                          onClick={() => setSort(1)}
+                        >
+                          <ArrowUp size={16} />
+                        </button>
+
+                        <button
+                          className="sortBtn"
+                          onClick={() => setSort(-1)}
+                        >
+                          <ArrowDown size={16} />
+                        </button>
+
+                      </div>
+
+                    </th>
+
+                    <th className="px-6 py-5">
+
+                      <div className="flex items-center gap-2">
+
+                        Date
+
+                        <button
+                          className="sortBtn"
+                          onClick={() => setDateSort(1)}
+                        >
+                          <ArrowUp size={16} />
+                        </button>
+
+                        <button
+                          className="sortBtn"
+                          onClick={() => setDateSort(-1)}
+                        >
+                          <ArrowDown size={16} />
+                        </button>
+
+                      </div>
+
+                    </th>
+
+                    <th className="px-6 py-5">Category</th>
+
+                    <th className="px-6 py-5">Mode</th>
+
+                    <th className="px-6 py-5 text-center">
+                      Action
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+                {/* TABLE BODY */}
+                <tbody>
+
+                  {loading ? (
+
+                    <tr>
+
+                      <td
+                        colSpan="7"
+                        className="text-center py-14 text-slate-500"
+                      >
+                        Loading expenses...
+                      </td>
+
+                    </tr>
+
+                  ) : expenses.length === 0 ? (
+
+                    <tr>
+
+                      <td
+                        colSpan="7"
+                        className="text-center py-14 text-slate-500"
+                      >
+                        No expenses found
+                      </td>
+
+                    </tr>
+
+                  ) : (
+
+                    expenses.map((ex) => (
+
+                      <tr
+                        key={ex._id}
+                        className="tableRow border-b border-slate-800"
+                      >
+
+                        {/* TITLE */}
+                        <td className="px-6 py-5 font-semibold text-white">
+                          {ex.title}
+                        </td>
+
+                        {/* DESCRIPTION */}
+                        <td className="px-6 py-5 text-slate-400 max-w-xs truncate">
+                          {ex.description || "No description"}
+                        </td>
+
+                        {/* AMOUNT */}
+                        <td className="px-6 py-5 text-emerald-400 font-bold">
+                          ₹{ex.amount}
+                        </td>
+
+                        {/* DATE */}
+                        <td className="px-6 py-5 text-slate-400">
+                          {new Date(ex.expenseDate).toLocaleDateString()}
+                        </td>
+
+                        {/* CATEGORY */}
+                        <td className="px-6 py-5">
+
+                          <span className="px-3 py-1 rounded-lg text-sm bg-slate-800 border border-slate-700 text-indigo-300">
+
+                            {ex.expCat?.catName || "No Category"}
+
+                          </span>
+
+                        </td>
+
+                        {/* PAYMENT */}
+                        <td className="px-6 py-5">
+
+                          <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${
+                            ex.paymentMode === 'CASH'
+                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                              : ex.paymentMode === 'CARD'
+                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                              : ex.paymentMode === 'UPI'
+                              ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                              : 'bg-slate-500/10 text-slate-300 border-slate-500/20'
+                          }`}>
+
+                            {ex.paymentMode}
+
+                          </span>
+
+                        </td>
+
+                        {/* DELETE BUTTON */}
+                        <td className="px-6 py-5 text-center">
+
+                          <button
+                            onClick={() => deleteExpense(ex._id)}
+                            className="deleteBtn bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 p-2 rounded-lg"
+                          >
+
+                            <Trash2 size={18} />
+
+                          </button>
+
+                        </td>
+
+                      </tr>
+                    ))
+                  )}
+
+                </tbody>
+
+              </table>
 
             </div>
-          )}
+
+          </div>
+
         </div>
+
       </div>
     </>
   )

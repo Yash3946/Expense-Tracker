@@ -6,6 +6,8 @@ import { GetMyCategories } from "../user/GetMyCategories"
 import { UserNavbar } from "../user/UserNavbar"
 import { AddExpense } from "../user/AddExpense"
 import { MyExpenses } from "../user/MyExpenses"
+import { Report } from "../user/Report"
+import { Report1 } from "../user/Report1"
 
 const AppRoutes = () => {
 
@@ -37,6 +39,14 @@ const AppRoutes = () => {
                 {
                     path:"my-expenses",
                     element:<MyExpenses />
+                },
+                {
+                    path:"reports",
+                    element:<Report />
+                },
+                {
+                    path:"report1",
+                    element:<Report1 />
                 }
             ]
         }
