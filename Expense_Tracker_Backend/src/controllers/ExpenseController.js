@@ -30,8 +30,18 @@ const getExpesneByUserId = async(req,res)=>{
     var datesort = req.query.date || 1
     datesort = parseInt(datesort);
     console.log(datesort)
-    const expenses = await expenseSchema.find({userId:userId}).populate("expCat").sort({amount:sort,expenseDate:datesort})
-    console.log(
+ const type = req.query.type || "expense"
+    let expenses;
+    if(type =="expense"){
+        //if type is expense then  fetch title description amount expDate paymentMode expCat     
+        //fetch only thoese data where income filed is not there
+         expenses = await expenseSchema.find({userId:userId,income:{$exists:false}},["title","description","amount","expenseDate","paymentMode","expCat"]).populate("expCat").sort({amount:sort,expenseDate:datesort})
+    }
+    else{
+        //if type is income then fetch title description incomeCategory income expDate
+        ////fetch only thoese data where expense filed is not there
+         expenses = await expenseSchema.find({userId:userId,amount:{$exists:false}},["title","description","income","expenseDate","incomeCategory","paymentMode"]).populate("incomeCategory").sort({income:sort,expenseDate:datesort})
+    }    console.log(
             expenses.map(e => e.expenseDate)
         );
     res.status(200).json({

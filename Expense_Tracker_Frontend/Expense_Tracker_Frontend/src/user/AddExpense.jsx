@@ -10,25 +10,40 @@ export const AddExpense = () => {
 
   const [categories, setCategories] = useState([])
   const [selectedFile, setSelectedFile] = useState("")
+  const [selectedType, setselectedType] = useState("expense")
   const navigate = useNavigate()
 
-  const getMyCategories = async () => {
-    try {
-      const res = await axiosInstance.get("/expCat/userCategory")
-      setCategories(res.data.data)
-    } catch {
-      toast.error("Failed to load categories ❌")
+    const getMyExpCategories = async()=>{
+    const res = await axiosInstance.get("/expCat/userCategory")
+    console.log(res.data.data)
+    setCategories(res.data.data)
+}
+    const getMyIncomeCategories = async()=>{
+        const res = await axiosInstance.get("/incomeCat/incomeCategory")
+        console.log(res.data.data)
+        setCategories(res.data.data)
     }
-  }
 
   useEffect(() => {
-    getMyCategories()
-  }, [])
+   if(selectedType == "expense"){
+        getMyExpCategories()
+      }else{
+        getMyIncomeCategories()
+      }
+    },[selectedType])
 
   const submitHandler = async (data) => {
 
     try {
 
+        if(selectedType =="income"){
+          alert("income")
+          data.income = data.amount
+          delete data.amount
+          data.incomeCategory = data.expCat
+          delete data.expCat
+          
+        }
       const res = await axiosInstance.post("/exp/", data)
 
       if (res.status === 201) {
@@ -117,7 +132,13 @@ export const AddExpense = () => {
               Track your spending smartly 💸
             </p>
           </div>
-
+             <div className="flex">
+          <label>SELECT CATEGORY TYPE</label>
+          <select onChange={(e)=>setselectedType(e.target.value)}>
+            <option value="expense">EXPENSE</option>
+            <option value="income">INCOME</option>
+          </select>
+        </div>
           {/* FORM */}
           <form
             onSubmit={handleSubmit(submitHandler)}

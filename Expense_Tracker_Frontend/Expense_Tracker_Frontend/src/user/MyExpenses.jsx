@@ -9,32 +9,67 @@ export const MyExpenses = () => {
   const [loading, setLoading] = useState(true)
   const [sort, setSort] = useState(1)
   const [dateSort, setDateSort] = useState(1)
+  const [type, settype] = useState("expense")
 
+  // GET DATA
   const getMyExpenses = async () => {
 
     try {
 
       const res = await axiosInstance.get(
-        `/exp/expbyuserid?sort=${sort}&date=${dateSort}`
+        `/exp/expbyuserid?sort=${sort}&date=${dateSort}&type=${type}`
       )
 
-      setExpenses(res.data.data)
+      if (res.data && Array.isArray(res.data.data)) {
+
+        setExpenses(res.data.data)
+
+      } else {
+
+        setExpenses([])
+      }
 
     } catch (err) {
 
       console.error(err)
-      toast.error("Failed to load expenses ❌")
+      toast.error("Failed to load data ❌")
 
     } finally {
+
       setLoading(false)
     }
   }
 
-  // DELETE EXPENSE
+  // SEARCH
+  const searchHanlder = async (e) => {
+
+    try {
+
+      const res = await axiosInstance.get(
+        "/exp/search?expName=" + e.target.value
+      )
+
+      if (res.data && Array.isArray(res.data.data)) {
+
+        setExpenses(res.data.data)
+
+      } else {
+
+        setExpenses([])
+      }
+
+    } catch (err) {
+
+      console.error(err)
+      toast.error("Search failed ❌")
+    }
+  }
+
+  // DELETE
   const deleteExpense = async (id) => {
 
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this expense?"
+      "Are you sure you want to delete this record?"
     )
 
     if (!confirmDelete) return
@@ -47,40 +82,26 @@ export const MyExpenses = () => {
         prev.filter((exp) => exp._id !== id)
       )
 
-      toast.success("Expense deleted successfully ✅")
+      toast.success("Deleted successfully ✅")
 
     } catch (err) {
 
       console.error(err)
-
       toast.error("Delete failed ❌")
     }
   }
 
-  const searchHanlder = async (e) => {
-
-    try {
-
-      const res = await axiosInstance.get(
-        "/exp/search?expName=" + e.target.value
-      )
-
-      setExpenses(res.data.data)
-
-    } catch {
-
-      toast.error("Search failed ❌")
-    }
-  }
-
   useEffect(() => {
+
     getMyExpenses()
-  }, [sort, dateSort])
+
+  }, [sort, dateSort, type])
 
   return (
     <>
       {/* INTERNAL CSS */}
       <style>{`
+
         .glassTable {
           background: rgba(15, 23, 42, 0.75);
           border: 1px solid rgba(99,102,241,0.15);
@@ -124,6 +145,7 @@ export const MyExpenses = () => {
         .deleteBtn:hover{
           transform: scale(1.08);
         }
+
       `}</style>
 
       <div
@@ -141,11 +163,13 @@ export const MyExpenses = () => {
             <div>
 
               <h1 className="text-3xl font-bold">
-                My <span className="text-indigo-400">Expenses</span>
+                My <span className="text-indigo-400">
+                  {type === "expense" ? "Expenses" : "Income"}
+                </span>
               </h1>
 
               <p className="text-slate-400 text-sm mt-1">
-                Manage and track your spending 💸
+                Manage and track your records 💸
               </p>
 
             </div>
@@ -163,19 +187,39 @@ export const MyExpenses = () => {
 
           </div>
 
-          {/* SEARCH */}
-          <div className="mb-6">
+          {/* SEARCH + TYPE */}
+          <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-end">
 
-            <label className="block mb-2 text-sm text-slate-300">
-              Search Expense
-            </label>
+            <div>
 
-            <input
-              type="text"
-              placeholder="Search by expense name..."
-              onChange={(e) => searchHanlder(e)}
-              className="searchInput w-full md:w-96 px-4 py-3 rounded-xl"
-            />
+              <label className="block mb-2 text-sm text-slate-300">
+                Search
+              </label>
+
+              <input
+                type="text"
+                placeholder="Search..."
+                onChange={(e) => searchHanlder(e)}
+                className="searchInput w-full md:w-96 px-4 py-3 rounded-xl"
+              />
+
+            </div>
+
+            <div>
+
+              <label className="block mb-2 text-sm text-slate-300">
+                Type
+              </label>
+
+              <select
+                onChange={(e) => settype(e.target.value)}
+                className="searchInput px-4 py-3 rounded-xl"
+              >
+                <option value="expense">EXPENSE</option>
+                <option value="income">INCOME</option>
+              </select>
+
+            </div>
 
           </div>
 
@@ -271,7 +315,7 @@ export const MyExpenses = () => {
                         colSpan="7"
                         className="text-center py-14 text-slate-500"
                       >
-                        Loading expenses...
+                        Loading records...
                       </td>
 
                     </tr>
@@ -284,7 +328,7 @@ export const MyExpenses = () => {
                         colSpan="7"
                         className="text-center py-14 text-slate-500"
                       >
-                        No expenses found
+                        No records found
                       </td>
 
                     </tr>
@@ -310,7 +354,17 @@ export const MyExpenses = () => {
 
                         {/* AMOUNT */}
                         <td className="px-6 py-5 text-emerald-400 font-bold">
-                          ₹{ex.amount}
+
+                          ₹{
+                            parseFloat(
+                              type === "expense"
+                                ? ex.amount
+                                : ex.income
+                            ).toLocaleString(undefined, {
+                              minimumFractionDigits: 2
+                            })
+                          }
+
                         </td>
 
                         {/* DATE */}
@@ -323,13 +377,17 @@ export const MyExpenses = () => {
 
                           <span className="px-3 py-1 rounded-lg text-sm bg-slate-800 border border-slate-700 text-indigo-300">
 
-                            {ex.expCat?.catName || "No Category"}
+                            {
+                              type === "expense"
+                                ? ex.expCat?.catName?.toUpperCase()
+                                : ex.incomeCategory?.catName?.toUpperCase()
+                            }
 
                           </span>
 
                         </td>
 
-                        {/* PAYMENT */}
+                        {/* PAYMENT MODE */}
                         <td className="px-6 py-5">
 
                           <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${
@@ -342,13 +400,13 @@ export const MyExpenses = () => {
                               : 'bg-slate-500/10 text-slate-300 border-slate-500/20'
                           }`}>
 
-                            {ex.paymentMode}
+                            {ex.paymentMode || "----"}
 
                           </span>
 
                         </td>
 
-                        {/* DELETE BUTTON */}
+                        {/* DELETE */}
                         <td className="px-6 py-5 text-center">
 
                           <button
