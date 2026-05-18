@@ -4,57 +4,102 @@ import axiosInstance from '../api/axiosInstance'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
+import {
+  Wallet,
+  IndianRupee,
+  CalendarDays,
+  Receipt,
+  FileText,
+  Layers3
+} from 'lucide-react'
+
 export const AddExpense = () => {
 
-  const { register, handleSubmit } = useForm()
+  const {
+    register,
+    handleSubmit,
+    reset
+  } = useForm()
 
   const [categories, setCategories] = useState([])
   const [selectedFile, setSelectedFile] = useState("")
-  const [selectedType, setselectedType] = useState("expense")
+  const [selectedType, setSelectedType] = useState("expense")
+  const [loading, setLoading] = useState(false)
+
   const navigate = useNavigate()
 
-    const getMyExpCategories = async()=>{
-    const res = await axiosInstance.get("/expCat/userCategory")
-    console.log(res.data.data)
-    setCategories(res.data.data)
-}
-    const getMyIncomeCategories = async()=>{
-        const res = await axiosInstance.get("/incomeCat/incomeCategory")
-        console.log(res.data.data)
-        setCategories(res.data.data)
+  // ================= CATEGORY =================
+
+  const getMyExpCategories = async () => {
+    try {
+
+      const res = await axiosInstance.get("/expCat/userCategory")
+
+      setCategories(res.data.data)
+
+    } catch (err) {
+
+      toast.error("Failed to load expense categories")
     }
+  }
+
+  const getMyIncomeCategories = async () => {
+    try {
+
+      const res = await axiosInstance.get("/incomeCat/incomeCategory")
+
+      setCategories(res.data.data)
+
+    } catch (err) {
+
+      toast.error("Failed to load income categories")
+    }
+  }
 
   useEffect(() => {
-   if(selectedType == "expense"){
-        getMyExpCategories()
-      }else{
-        getMyIncomeCategories()
-      }
-    },[selectedType])
+
+    if (selectedType === "expense") {
+      getMyExpCategories()
+    } else {
+      getMyIncomeCategories()
+    }
+
+  }, [selectedType])
+
+  // ================= SUBMIT =================
 
   const submitHandler = async (data) => {
 
     try {
 
-        if(selectedType =="income"){
-          alert("income")
-          data.income = data.amount
-          delete data.amount
-          data.incomeCategory = data.expCat
-          delete data.expCat
-          
-        }
+      setLoading(true)
+
+      if (selectedType === "income") {
+
+        data.income = data.amount
+        delete data.amount
+
+        data.incomeCategory = data.expCat
+        delete data.expCat
+      }
+
       const res = await axiosInstance.post("/exp/", data)
 
       if (res.status === 201) {
 
-        // FILE UPLOAD
         if (selectedFile) {
 
           const formData = new FormData()
 
-          formData.append("expId", res.data.data._id)
-          formData.append("receipt", selectedFile)
+          formData.append(
+            "expId",
+            res.data.data._id
+          )
+
+          formData.append(
+            "receipt",
+            selectedFile
+          )
 
           const res2 = await axiosInstance.put(
             "/exp/uploadreceipt",
@@ -62,39 +107,70 @@ export const AddExpense = () => {
           )
 
           if (res2.status === 200) {
-            toast.success("Expense added with receipt ✅")
-            navigate("/my-expenses")
+
+            toast.success(
+              `${selectedType} added with receipt ✅`
+            )
+
           } else {
-            toast.warning("Expense added but receipt failed ⚠️")
-            navigate("/my-expenses")
+
+            toast.warning(
+              `${selectedType} added but receipt upload failed`
+            )
           }
 
         } else {
-          toast.success("Expense added successfully ✅")
-          navigate("/my-expenses")
+
+          toast.success(
+            `${selectedType} added successfully ✅`
+          )
         }
+
+        reset()
+
+        navigate("/my-expenses")
       }
 
     } catch (err) {
-      toast.error(err.response?.data?.message || "Something went wrong ❌")
+
+      toast.error(
+        err.response?.data?.message ||
+        "Something went wrong ❌"
+      )
+
+    } finally {
+
+      setLoading(false)
     }
   }
 
   return (
     <>
-      {/* INTERNAL CSS */}
       <style>{`
+
+        .mainBg {
+          background:
+          radial-gradient(circle at top left,#312e81 0%,transparent 30%),
+          radial-gradient(circle at bottom right,#0f766e 0%,transparent 30%),
+          linear-gradient(135deg,#020617,#0f172a,#020617);
+        }
+
         .glassCard {
-          background: rgba(15, 23, 42, 0.75);
-          border: 1px solid rgba(99,102,241,0.15);
-          backdrop-filter: blur(12px);
+          background: rgba(15, 23, 42, 0.70);
+          backdrop-filter: blur(18px);
+          border: 1px solid rgba(255,255,255,0.08);
+          box-shadow: 0 10px 40px rgba(0,0,0,0.45);
         }
 
         .inputField {
-          background: rgba(15,23,42,0.5);
-          border: 1px solid rgba(99,102,241,0.2);
+          background: rgba(15,23,42,0.65);
+          border: 1px solid rgba(99,102,241,0.18);
           color: white;
-          transition: all 0.3s ease;
+          transition: 0.3s ease;
+        }
+
+        .inputField::placeholder {
+          color: #94a3b8;
         }
 
         .inputField:focus {
@@ -111,74 +187,157 @@ export const AddExpense = () => {
           transform: translateY(-2px);
           box-shadow: 0 8px 25px rgba(99,102,241,0.4);
         }
+
+        .typeBtn {
+          transition: 0.3s ease;
+        }
+
+        .activeType {
+          background: linear-gradient(135deg,#6366f1,#4338ca);
+          color: white;
+          box-shadow: 0 5px 20px rgba(99,102,241,0.35);
+        }
+
       `}</style>
 
-      <div
-        className="min-h-screen px-4 py-12 text-white flex items-center justify-center"
-        style={{
-          background: 'linear-gradient(135deg,#020617,#0f172a,#020617)'
-        }}
-      >
+      <div className="mainBg min-h-screen flex items-center justify-center px-4 py-10 text-white">
 
-        <div className="glassCard w-full max-w-3xl rounded-3xl p-8">
+        <div className="glassCard w-full max-w-4xl rounded-3xl p-8">
 
           {/* HEADER */}
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold">
-              Add <span className="text-indigo-400">Expense</span>
+
+          <div className="text-center mb-10">
+
+            <div className="flex justify-center mb-4">
+
+              <div className="bg-indigo-500/20 p-4 rounded-2xl">
+
+                <Wallet
+                  size={40}
+                  className="text-indigo-400"
+                />
+
+              </div>
+
+            </div>
+
+            <h1 className="text-4xl font-bold">
+
+              Add
+
+              <span className="text-indigo-400">
+
+                {" "}
+
+                {
+                  selectedType === "expense"
+                    ? "Expense"
+                    : "Income"
+                }
+
+              </span>
+
             </h1>
 
-            <p className="text-slate-400 text-sm mt-2">
-              Track your spending smartly 💸
+            <p className="text-slate-400 mt-3">
+              Manage your finances smartly 🚀
             </p>
+
           </div>
-             <div className="flex">
-          <label>SELECT CATEGORY TYPE</label>
-          <select onChange={(e)=>setselectedType(e.target.value)}>
-            <option value="expense">EXPENSE</option>
-            <option value="income">INCOME</option>
-          </select>
-        </div>
+
+          {/* TYPE BUTTONS */}
+
+          <div className="flex justify-center gap-4 mb-8">
+
+            <button
+              type="button"
+              onClick={() => setSelectedType("expense")}
+              className={`typeBtn px-6 py-3 rounded-xl font-semibold border border-indigo-500/20
+              ${
+                selectedType === "expense"
+                  ? "activeType"
+                  : "bg-slate-800/60 text-slate-300"
+              }`}
+            >
+              Expense
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedType("income")}
+              className={`typeBtn px-6 py-3 rounded-xl font-semibold border border-emerald-500/20
+              ${
+                selectedType === "income"
+                  ? "bg-emerald-600 text-white shadow-lg"
+                  : "bg-slate-800/60 text-slate-300"
+              }`}
+            >
+              Income
+            </button>
+
+          </div>
+
           {/* FORM */}
+
           <form
             onSubmit={handleSubmit(submitHandler)}
             className="space-y-6"
           >
 
             {/* TITLE */}
+
             <div>
-              <label className="text-sm text-slate-300 mb-2 block">
-                Expense Title
+
+              <label className="text-sm mb-2 text-slate-300 flex items-center gap-2">
+
+                <Receipt size={16} />
+
+                Title
+
               </label>
 
               <input
                 type="text"
-                placeholder="Enter expense title"
+                placeholder={`Enter ${selectedType} title`}
                 {...register("title")}
                 className="inputField w-full px-4 py-3 rounded-xl"
               />
+
             </div>
 
             {/* DESCRIPTION */}
+
             <div>
-              <label className="text-sm text-slate-300 mb-2 block">
+
+              <label className="text-sm mb-2 text-slate-300 flex items-center gap-2">
+
+                <FileText size={16} />
+
                 Description
+
               </label>
 
               <textarea
-                rows="3"
-                placeholder="Expense details..."
+                rows="4"
+                placeholder="Enter details..."
                 {...register("description")}
                 className="inputField w-full px-4 py-3 rounded-xl"
               />
+
             </div>
 
             {/* AMOUNT + DATE */}
+
             <div className="grid md:grid-cols-2 gap-5">
 
               <div>
-                <label className="text-sm text-slate-300 mb-2 block">
+
+                <label className="text-sm mb-2 text-slate-300 flex items-center gap-2">
+
+                  <IndianRupee size={16} />
+
                   Amount
+
                 </label>
 
                 <input
@@ -187,11 +346,17 @@ export const AddExpense = () => {
                   {...register("amount")}
                   className="inputField w-full px-4 py-3 rounded-xl"
                 />
+
               </div>
 
               <div>
-                <label className="text-sm text-slate-300 mb-2 block">
-                  Expense Date
+
+                <label className="text-sm mb-2 text-slate-300 flex items-center gap-2">
+
+                  <CalendarDays size={16} />
+
+                  Date
+
                 </label>
 
                 <input
@@ -199,38 +364,54 @@ export const AddExpense = () => {
                   {...register("expenseDate")}
                   className="inputField w-full px-4 py-3 rounded-xl"
                 />
+
               </div>
 
             </div>
 
             {/* CATEGORY + PAYMENT */}
+
             <div className="grid md:grid-cols-2 gap-5">
 
               <div>
-                <label className="text-sm text-slate-300 mb-2 block">
+
+                <label className="text-sm mb-2 text-slate-300 flex items-center gap-2">
+
+                  <Layers3 size={16} />
+
                   Category
+
                 </label>
 
                 <select
                   {...register("expCat")}
                   className="inputField w-full px-4 py-3 rounded-xl"
                 >
-                  <option value="">Select Category</option>
 
-                  {categories?.map((cat) => (
-                    <option
-                      key={cat._id}
-                      value={cat._id}
-                    >
-                      {cat.catName}
-                    </option>
-                  ))}
+                  <option value="">
+                    Select Category
+                  </option>
+
+                  {
+                    categories?.map((cat) => (
+
+                      <option
+                        key={cat._id}
+                        value={cat._id}
+                      >
+                        {cat.catName}
+                      </option>
+
+                    ))
+                  }
 
                 </select>
+
               </div>
 
               <div>
-                <label className="text-sm text-slate-300 mb-2 block">
+
+                <label className="text-sm mb-2 text-slate-300">
                   Payment Mode
                 </label>
 
@@ -238,40 +419,59 @@ export const AddExpense = () => {
                   {...register("paymentMode")}
                   className="inputField w-full px-4 py-3 rounded-xl"
                 >
+
                   <option value="CASH">Cash</option>
+
                   <option value="CARD">Card</option>
+
                   <option value="UPI">UPI</option>
+
                   <option value="CHEQUE">Cheque</option>
+
                 </select>
+
               </div>
 
             </div>
 
             {/* FILE */}
+
             <div>
-              <label className="text-sm text-slate-300 mb-2 block">
+
+              <label className="text-sm mb-2 text-slate-300">
                 Upload Receipt
               </label>
 
               <input
                 type="file"
-                onChange={(event) => {
+                onChange={(event) =>
                   setSelectedFile(event.target.files[0])
-                }}
+                }
                 className="inputField w-full px-4 py-3 rounded-xl"
               />
+
             </div>
 
             {/* BUTTON */}
+
             <button
               type="submit"
-              className="submitBtn w-full py-3 rounded-xl font-semibold text-white transition-all duration-300"
+              disabled={loading}
+              className="submitBtn w-full py-4 rounded-xl font-semibold text-lg transition-all duration-300 disabled:opacity-50"
             >
-              Add Expense
+
+              {
+                loading
+                  ? "Processing..."
+                  : `Add ${selectedType}`
+              }
+
             </button>
 
           </form>
+
         </div>
+
       </div>
     </>
   )

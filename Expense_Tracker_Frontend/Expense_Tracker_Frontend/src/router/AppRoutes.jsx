@@ -8,6 +8,8 @@ import { AddExpense } from "../user/AddExpense"
 import { MyExpenses } from "../user/MyExpenses"
 import { Report } from "../user/Report"
 import { Report1 } from "../user/Report1"
+import { UserProfile } from "../user/UserProfile"
+
 
 const AppRoutes = () => {
 
@@ -47,7 +49,11 @@ const AppRoutes = () => {
                 {
                     path:"report1",
                     element:<Report1 />
-                }
+                },
+               {
+                path:"user-profile",
+                element:<UserProfile/>
+               }
             ]
         }
     ])

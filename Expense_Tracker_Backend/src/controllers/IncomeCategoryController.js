@@ -20,8 +20,6 @@ const createIncomeCategory = async(req,res)=>{
 
     }
 
-
-
 }
 
 const getIncomecategoriesByUserId = async(req,res)=>{

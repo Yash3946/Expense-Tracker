@@ -107,10 +107,32 @@ const loginUser = async (req, res) => {
         })
     }
 }
+const getProfile = async (req, res) => {
+
+  try {
+    const userId = req.user._id
+    const user = await userSchema.findById(userId)
+
+    res.status(200).json({
+      message: "Profile fetched successfully",
+      data: user
+
+    })
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({
+    message: "Error while fetching profile"
+
+    })
+
+  }
+
+}
 
 module.exports = {
     createUser,
     getAllUsers,
     deleteUser,
-    loginUser
+    loginUser,
+    getProfile
 }
