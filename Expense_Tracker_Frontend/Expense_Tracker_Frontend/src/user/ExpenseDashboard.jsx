@@ -65,25 +65,25 @@ export const ExpenseDashboard = () => {
       label: "Total Income",
       value: formatMoney(summary.totalIncome),
       icon: ArrowUpRight,
-      tone: "text-emerald-700 bg-emerald-50",
+      tone: "text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/40",
     },
     {
       label: "Total Expense",
       value: formatMoney(summary.totalExpense),
       icon: ArrowDownRight,
-      tone: "text-rose-700 bg-rose-50",
+      tone: "text-rose-700 bg-rose-50 dark:text-rose-300 dark:bg-rose-950/40",
     },
     {
       label: "Net Balance",
       value: formatMoney(summary.balance),
       icon: WalletCards,
-      tone: "text-cyan-700 bg-cyan-50",
+      tone: "text-cyan-700 bg-cyan-50 dark:text-cyan-300 dark:bg-cyan-950/40",
     },
     {
       label: "Records",
       value: summary.recordCount,
       icon: ReceiptText,
-      tone: "text-slate-700 bg-slate-100",
+      tone: "text-slate-700 bg-slate-100 dark:text-slate-300 dark:bg-slate-800/40",
     },
   ];
 
@@ -115,7 +115,7 @@ export const ExpenseDashboard = () => {
               </div>
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-slate-950 p-5 text-white">
+            <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-950 p-5 text-white">
               <p className="text-sm font-bold text-slate-300">Available Balance</p>
               <p className="mt-3 text-4xl font-black">{formatMoney(summary.balance)}</p>
               <div className="mt-8 space-y-4">
@@ -133,7 +133,7 @@ export const ExpenseDashboard = () => {
         </div>
 
         <div className="app-card p-6">
-          <h2 className="text-lg font-black text-slate-950">Quick Actions</h2>
+          <h2 className="text-lg font-black text-slate-950 dark:text-white">Quick Actions</h2>
           <div className="mt-5 grid gap-3">
             <Link to="/add-category" className="secondary-btn justify-start">
               <FolderKanban size={18} />
@@ -159,7 +159,7 @@ export const ExpenseDashboard = () => {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-bold text-slate-500">{stat.label}</p>
-                  <p className="mt-2 text-2xl font-black text-slate-950">{stat.value}</p>
+                  <p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">{stat.value}</p>
                 </div>
                 <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${stat.tone}`}>
                   <Icon size={22} />
@@ -171,9 +171,9 @@ export const ExpenseDashboard = () => {
       </section>
 
       <section className="app-card overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 p-5">
           <div>
-            <h2 className="text-xl font-black text-slate-950">Recent Activity</h2>
+            <h2 className="text-xl font-black text-slate-950 dark:text-white">Recent Activity</h2>
             <p className="mt-1 text-sm text-slate-500">Latest income and expense entries.</p>
           </div>
           <Link to="/my-expenses" className="secondary-btn">
@@ -201,7 +201,7 @@ export const ExpenseDashboard = () => {
                   const isIncome = record.income !== undefined && record.income !== null;
                   return (
                     <tr key={record._id}>
-                      <td className="font-black text-slate-950">{record.title}</td>
+                      <td className="font-black text-slate-950 dark:text-white">{record.title}</td>
                       <td>{isIncome ? record.incomeCategory?.catName || "Income" : record.expCat?.catName || "Expense"}</td>
                       <td>
                         <span className="inline-flex items-center gap-2">
@@ -209,7 +209,7 @@ export const ExpenseDashboard = () => {
                           {record.expenseDate ? new Date(record.expenseDate).toLocaleDateString("en-IN") : "No date"}
                         </span>
                       </td>
-                      <td className={isIncome ? "font-black text-emerald-700" : "font-black text-rose-700"}>
+                      <td className={isIncome ? "font-black text-emerald-700 dark:text-emerald-400" : "font-black text-rose-700 dark:text-rose-400"}>
                         {isIncome ? "+" : "-"}
                         {formatMoney(isIncome ? record.income : record.amount)}
                       </td>

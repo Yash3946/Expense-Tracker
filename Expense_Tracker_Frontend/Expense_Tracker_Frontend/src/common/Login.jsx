@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import axios from "../api/axiosInstance";
 import { Link, useNavigate } from "react-router-dom";
-import { LogIn, Mail, WalletCards } from "lucide-react";
+import { LogIn, Mail, WalletCards, Sun, Moon } from "lucide-react";
+import { useTheme } from "../common/ThemeContext";
 
 export const Login = () => {
   const {
@@ -11,6 +12,7 @@ export const Login = () => {
   } = useForm();
 
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const onSubmit = async (data) => {
     const res = await axios.post("/user/login", data);
@@ -25,8 +27,18 @@ export const Login = () => {
   };
 
   return (
-    <div className="app-shell flex min-h-screen items-center justify-center p-4">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl md:grid-cols-[0.9fr_1.1fr]">
+    <div className="app-shell relative flex min-h-screen items-center justify-center p-4">
+      {/* Sleek top-right Theme Toggle Button */}
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="icon-btn absolute top-6 right-6 h-11 w-11 shadow-md rounded-full border border-slate-200 dark:border-slate-800"
+        title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+      >
+        {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+      </button>
+
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl md:grid-cols-[0.9fr_1.1fr]">
         <section className="bg-slate-950 p-8 text-white sm:p-10">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white text-slate-950">
@@ -37,7 +49,7 @@ export const Login = () => {
               <p className="text-xs font-bold text-slate-400">Personal finance desk</p>
             </div>
           </div>
-          <h1 className="mt-14 text-4xl font-black leading-tight">Welcome back to your money workspace.</h1>
+          <h1 className="mt-14 text-4xl font-black leading-tight text-white">Welcome back to your money workspace.</h1>
           <p className="mt-4 text-slate-300">Sign in to manage income, expenses, reports, categories, and budgets.</p>
         </section>
 
@@ -46,8 +58,8 @@ export const Login = () => {
             <LogIn size={15} />
             Sign in
           </span>
-          <h2 className="mt-4 text-3xl font-black text-slate-950">Login</h2>
-          <p className="mt-2 text-slate-500">Use your registered email and password.</p>
+          <h2 className="mt-4 text-3xl font-black text-slate-950 dark:text-white">Login</h2>
+          <p className="mt-2 text-slate-500 dark:text-slate-400">Use your registered email and password.</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
             <div>
@@ -97,9 +109,9 @@ export const Login = () => {
             </button>
           </form>
 
-          <p className="mt-8 text-center text-sm font-bold text-slate-500">
+          <p className="mt-8 text-center text-sm font-bold text-slate-500 dark:text-slate-400">
             New here?{" "}
-            <Link to="/signup" className="text-cyan-700 hover:text-cyan-900">
+            <Link to="/signup" className="text-cyan-700 dark:text-cyan-400 hover:text-cyan-900 dark:hover:text-cyan-300">
               Create an account
             </Link>
           </p>
