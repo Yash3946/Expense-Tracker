@@ -1,108 +1,121 @@
-import React, { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import React, { useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import {
+  BarChart3,
+  CreditCard,
+  FolderKanban,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  PieChart,
+  Plus,
+  ReceiptText,
+  User,
+  WalletCards,
+  X,
+} from "lucide-react";
 
 export const UserNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
-  // Array of links for easy management
   const navLinks = [
-    { name: 'Dashboard', path: '' },
-    { name: 'Add-Category', path: 'add-category' },
-    { name: 'my-categories', path: 'my-categories' },
-    { name: 'add-Expense', path: 'add-expense' },
-    { name: 'my-expenses', path: 'my-expenses' },
-    { name: 'reports', path: 'reports' },
-    { name: 'report1', path: 'report1' },
-    { name: 'Profile', path: 'user-profile' },
-    { name: 'Settings', path: 'settings' },
+    { name: "Dashboard", path: "", icon: LayoutDashboard },
+    { name: "Add Category", path: "add-category", icon: Plus },
+    { name: "Categories", path: "my-categories", icon: FolderKanban },
+    { name: "Add Record", path: "add-expense", icon: ReceiptText },
+    { name: "Records", path: "my-expenses", icon: CreditCard },
+    { name: "Category Report", path: "reports", icon: PieChart },
+    { name: "Mode Report", path: "report1", icon: BarChart3 },
+    { name: "Budget", path: "budget", icon: WalletCards },
+    { name: "Profile", path: "user-profile", icon: User },
   ];
 
+  const logout = () => {
+    localStorage.removeItem("token");
+    document.cookie = "token=; path=/; max-age=0; sameSite=Lax";
+    navigate("/login");
+  };
+
+  const linkClass = ({ isActive }) =>
+    `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition ${
+      isActive
+        ? "bg-slate-950 text-white shadow-sm"
+        : "text-slate-600 hover:bg-white hover:text-slate-950"
+    }`;
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <nav className="bg-slate-900 shadow-md border-b border-slate-700 shrink-0">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            {/* Logo */}
-            <div className="shrink-0 flex items-center">
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-                ExpTrack
-              </span>
+    <div className="app-shell flex min-h-screen flex-col">
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-[#f6f7f4]/90 backdrop-blur-xl">
+        <div className="page-wrap flex min-h-16 items-center justify-between gap-4 py-3">
+          <NavLink to="/" className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-950 text-white">
+              <WalletCards size={23} />
             </div>
-            
-            {/* Desktop Menu */}
-            <div className="hidden sm:ml-8 sm:flex sm:space-x-8">
-              {navLinks.map((link, index) => (
-                <NavLink
-                  key={index}
-                  to={link.path}
-                  className={({ isActive }) =>
-                    `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-slate-300 hover:border-slate-300 hover:text-white'
-                    }`
-                  }
-                >
+            <div>
+              <p className="text-lg font-black leading-none text-slate-950">ExpTrack</p>
+              <p className="text-xs font-bold text-slate-500">Personal finance desk</p>
+            </div>
+          </NavLink>
+
+          <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <NavLink key={link.path || "dashboard"} to={link.path} end={link.path === ""} className={linkClass}>
+                  <Icon size={16} />
                   {link.name}
                 </NavLink>
-              ))}
-            </div>
-          </div>
-          
-          {/* Mobile menu button */}
-          <div className="-mr-2 flex items-center sm:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              type="button"
-              className="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-              aria-controls="mobile-menu"
-              aria-expanded="false"
-            >
-              <span className="sr-only">Open main menu</span>
-              {/* Icon when menu is closed */}
-              {!isOpen ? (
-                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              ) : (
-                /* Icon when menu is open */
-                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              )}
+              );
+            })}
+          </nav>
+
+          <div className="hidden items-center gap-2 lg:flex">
+            <button type="button" onClick={logout} className="secondary-btn">
+              <LogOut size={17} />
+              Logout
             </button>
           </div>
-        </div>
-      </div>
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="sm:hidden" id="mobile-menu">
-          <div className="pt-2 pb-3 space-y-1 bg-slate-900 border-t border-slate-700">
-            {navLinks.map((link, index) => (
-              <NavLink
-                key={index}
-                to={link.path}
-                onClick={() => setIsOpen(false)}
-                className={({ isActive }) =>
-                  `block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                    isActive
-                      ? 'bg-slate-800 border-blue-500 text-blue-400'
-                      : 'border-transparent text-slate-300 hover:bg-slate-800 hover:border-slate-300 hover:text-white'
-                  }`
-                }
-              >
-                {link.name}
-              </NavLink>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsOpen((value) => !value)}
+            className="icon-btn lg:hidden"
+            aria-label="Toggle navigation"
+            aria-expanded={isOpen}
+          >
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
-      )}
-      </nav>
-      
-      {/* Dashboard Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {isOpen && (
+          <div className="border-t border-slate-200 bg-[#f6f7f4] lg:hidden">
+            <nav className="page-wrap grid gap-2 py-4 sm:grid-cols-2">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <NavLink
+                    key={link.path || "dashboard"}
+                    to={link.path}
+                    end={link.path === ""}
+                    onClick={() => setIsOpen(false)}
+                    className={linkClass}
+                  >
+                    <Icon size={16} />
+                    {link.name}
+                  </NavLink>
+                );
+              })}
+              <button type="button" onClick={logout} className="secondary-btn sm:col-span-2">
+                <LogOut size={17} />
+                Logout
+              </button>
+            </nav>
+          </div>
+        )}
+      </header>
+
+      <main className="flex-1 py-8 sm:py-10">
         <Outlet />
       </main>
     </div>

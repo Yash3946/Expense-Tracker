@@ -1,22 +1,38 @@
 const multer = require("multer")
-const storage = multer.diskStorage({
-    destination: "./uploads",
-    filename: (req, file, cb) => {
-        cb(null, file.originalname)
-    }
+
+const cloudinary = require("cloudinary").v2
+
+const {
+    CloudinaryStorage
+} = require("multer-storage-cloudinary")
+
+cloudinary.config({
+
+    cloud_name: process.env.CLOUD_NAME,
+
+    api_key: process.env.API_KEY,
+
+    api_secret: process.env.API_SECRET
 })
 
+const storage = new CloudinaryStorage({
+
+    cloudinary: cloudinary,
+
+    params: {
+
+        folder: "expense_receipts",
+
+        allowed_formats: [
+            "jpg",
+            "jpeg",
+            "png"
+        ]
+    }
+})
 
 const upload = multer({
-    storage: storage,
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg") {
-            cb(null, true)
-        } else {
-            console.log("req.file.mimetype",file.mimetype)
-            cb(new Error("invalid file type"))
-        }
-    }
+    storage: storage
 })
 
-module.exports=upload
+module.exports = upload

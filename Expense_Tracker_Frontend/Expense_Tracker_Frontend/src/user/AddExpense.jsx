@@ -1,478 +1,224 @@
-import React, { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import axiosInstance from '../api/axiosInstance'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
-
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import axiosInstance from "../api/axiosInstance";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
-  Wallet,
-  IndianRupee,
   CalendarDays,
-  Receipt,
+  CreditCard,
   FileText,
-  Layers3
-} from 'lucide-react'
+  IndianRupee,
+  Receipt,
+  Save,
+  Tag,
+  Upload,
+  Wallet,
+} from "lucide-react";
 
 export const AddExpense = () => {
-
   const {
     register,
     handleSubmit,
-    reset
-  } = useForm()
+    formState: { errors },
+  } = useForm();
 
-  const [categories, setCategories] = useState([])
-  const [selectedFile, setSelectedFile] = useState("")
-  const [selectedType, setSelectedType] = useState("expense")
-  const [loading, setLoading] = useState(false)
+  const [categories, setCategories] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedType, setSelectedType] = useState("expense");
 
-  const navigate = useNavigate()
-
-  // ================= CATEGORY =================
+  const navigate = useNavigate();
 
   const getMyExpCategories = async () => {
     try {
-
-      const res = await axiosInstance.get("/expCat/userCategory")
-
-      setCategories(res.data.data)
-
+      const res = await axiosInstance.get("/expCat/userCategory");
+      setCategories(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err) {
-
-      toast.error("Failed to load expense categories")
+      console.log(err);
     }
-  }
+  };
 
   const getMyIncomeCategories = async () => {
     try {
-
-      const res = await axiosInstance.get("/incomeCat/incomeCategory")
-
-      setCategories(res.data.data)
-
+      const res = await axiosInstance.get("/incomeCat/incomeCategory");
+      setCategories(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err) {
-
-      toast.error("Failed to load income categories")
+      console.log(err);
     }
-  }
+  };
 
   useEffect(() => {
-
     if (selectedType === "expense") {
-      getMyExpCategories()
+      getMyExpCategories();
     } else {
-      getMyIncomeCategories()
+      getMyIncomeCategories();
     }
-
-  }, [selectedType])
-
-  // ================= SUBMIT =================
+  }, [selectedType]);
 
   const submitHandler = async (data) => {
-
     try {
-
-      setLoading(true)
+      const payload = { ...data };
 
       if (selectedType === "income") {
-
-        data.income = data.amount
-        delete data.amount
-
-        data.incomeCategory = data.expCat
-        delete data.expCat
+        payload.income = payload.amount;
+        delete payload.amount;
+        payload.incomeCategory = payload.expCat;
+        delete payload.expCat;
       }
 
-      const res = await axiosInstance.post("/exp/", data)
+      const res = await axiosInstance.post("/exp/", payload);
 
       if (res.status === 201) {
-
         if (selectedFile) {
+          const formData = new FormData();
+          formData.append("expId", res.data.data._id);
+          formData.append("receipt", selectedFile);
 
-          const formData = new FormData()
-
-          formData.append(
-            "expId",
-            res.data.data._id
-          )
-
-          formData.append(
-            "receipt",
-            selectedFile
-          )
-
-          const res2 = await axiosInstance.put(
-            "/exp/uploadreceipt",
-            formData
-          )
-
+          const res2 = await axiosInstance.put("/exp/uploadreceipt", formData);
           if (res2.status === 200) {
-
-            toast.success(
-              `${selectedType} added with receipt ✅`
-            )
-
+            toast.success(`${selectedType === "expense" ? "Expense" : "Income"} added with receipt`);
           } else {
-
-            toast.warning(
-              `${selectedType} added but receipt upload failed`
-            )
+            toast.warning(`${selectedType === "expense" ? "Expense" : "Income"} added but receipt upload failed`);
           }
-
         } else {
-
-          toast.success(
-            `${selectedType} added successfully ✅`
-          )
+          toast.success(`${selectedType === "expense" ? "Expense" : "Income"} added successfully`);
         }
 
-        reset()
-
-        navigate("/my-expenses")
+        navigate("/my-expenses");
       }
-
     } catch (err) {
-
-      toast.error(
-        err.response?.data?.message ||
-        "Something went wrong ❌"
-      )
-
-    } finally {
-
-      setLoading(false)
+      console.log(err);
+      toast.error(err?.response?.data?.message || "Something went wrong");
     }
-  }
+  };
 
   return (
-    <>
-      <style>{`
-
-        .mainBg {
-          background:
-          radial-gradient(circle at top left,#312e81 0%,transparent 30%),
-          radial-gradient(circle at bottom right,#0f766e 0%,transparent 30%),
-          linear-gradient(135deg,#020617,#0f172a,#020617);
-        }
-
-        .glassCard {
-          background: rgba(15, 23, 42, 0.70);
-          backdrop-filter: blur(18px);
-          border: 1px solid rgba(255,255,255,0.08);
-          box-shadow: 0 10px 40px rgba(0,0,0,0.45);
-        }
-
-        .inputField {
-          background: rgba(15,23,42,0.65);
-          border: 1px solid rgba(99,102,241,0.18);
-          color: white;
-          transition: 0.3s ease;
-        }
-
-        .inputField::placeholder {
-          color: #94a3b8;
-        }
-
-        .inputField:focus {
-          outline: none;
-          border-color: #818cf8;
-          box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
-        }
-
-        .submitBtn {
-          background: linear-gradient(135deg,#6366f1,#4f46e5);
-        }
-
-        .submitBtn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(99,102,241,0.4);
-        }
-
-        .typeBtn {
-          transition: 0.3s ease;
-        }
-
-        .activeType {
-          background: linear-gradient(135deg,#6366f1,#4338ca);
-          color: white;
-          box-shadow: 0 5px 20px rgba(99,102,241,0.35);
-        }
-
-      `}</style>
-
-      <div className="mainBg min-h-screen flex items-center justify-center px-4 py-10 text-white">
-
-        <div className="glassCard w-full max-w-4xl rounded-3xl p-8">
-
-          {/* HEADER */}
-
-          <div className="text-center mb-10">
-
-            <div className="flex justify-center mb-4">
-
-              <div className="bg-indigo-500/20 p-4 rounded-2xl">
-
-                <Wallet
-                  size={40}
-                  className="text-indigo-400"
-                />
-
-              </div>
-
-            </div>
-
-            <h1 className="text-4xl font-bold">
-
-              Add
-
-              <span className="text-indigo-400">
-
-                {" "}
-
-                {
-                  selectedType === "expense"
-                    ? "Expense"
-                    : "Income"
-                }
-
-              </span>
-
-            </h1>
-
-            <p className="text-slate-400 mt-3">
-              Manage your finances smartly 🚀
-            </p>
-
-          </div>
-
-          {/* TYPE BUTTONS */}
-
-          <div className="flex justify-center gap-4 mb-8">
-
-            <button
-              type="button"
-              onClick={() => setSelectedType("expense")}
-              className={`typeBtn px-6 py-3 rounded-xl font-semibold border border-indigo-500/20
-              ${
-                selectedType === "expense"
-                  ? "activeType"
-                  : "bg-slate-800/60 text-slate-300"
-              }`}
-            >
-              Expense
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedType("income")}
-              className={`typeBtn px-6 py-3 rounded-xl font-semibold border border-emerald-500/20
-              ${
-                selectedType === "income"
-                  ? "bg-emerald-600 text-white shadow-lg"
-                  : "bg-slate-800/60 text-slate-300"
-              }`}
-            >
-              Income
-            </button>
-
-          </div>
-
-          {/* FORM */}
-
-          <form
-            onSubmit={handleSubmit(submitHandler)}
-            className="space-y-6"
-          >
-
-            {/* TITLE */}
-
-            <div>
-
-              <label className="text-sm mb-2 text-slate-300 flex items-center gap-2">
-
-                <Receipt size={16} />
-
-                Title
-
-              </label>
-
-              <input
-                type="text"
-                placeholder={`Enter ${selectedType} title`}
-                {...register("title")}
-                className="inputField w-full px-4 py-3 rounded-xl"
-              />
-
-            </div>
-
-            {/* DESCRIPTION */}
-
-            <div>
-
-              <label className="text-sm mb-2 text-slate-300 flex items-center gap-2">
-
-                <FileText size={16} />
-
-                Description
-
-              </label>
-
-              <textarea
-                rows="4"
-                placeholder="Enter details..."
-                {...register("description")}
-                className="inputField w-full px-4 py-3 rounded-xl"
-              />
-
-            </div>
-
-            {/* AMOUNT + DATE */}
-
-            <div className="grid md:grid-cols-2 gap-5">
-
-              <div>
-
-                <label className="text-sm mb-2 text-slate-300 flex items-center gap-2">
-
-                  <IndianRupee size={16} />
-
-                  Amount
-
-                </label>
-
-                <input
-                  type="number"
-                  placeholder="Enter amount"
-                  {...register("amount")}
-                  className="inputField w-full px-4 py-3 rounded-xl"
-                />
-
-              </div>
-
-              <div>
-
-                <label className="text-sm mb-2 text-slate-300 flex items-center gap-2">
-
-                  <CalendarDays size={16} />
-
-                  Date
-
-                </label>
-
-                <input
-                  type="date"
-                  {...register("expenseDate")}
-                  className="inputField w-full px-4 py-3 rounded-xl"
-                />
-
-              </div>
-
-            </div>
-
-            {/* CATEGORY + PAYMENT */}
-
-            <div className="grid md:grid-cols-2 gap-5">
-
-              <div>
-
-                <label className="text-sm mb-2 text-slate-300 flex items-center gap-2">
-
-                  <Layers3 size={16} />
-
-                  Category
-
-                </label>
-
-                <select
-                  {...register("expCat")}
-                  className="inputField w-full px-4 py-3 rounded-xl"
+    <div className="page-wrap">
+      <section className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <span className="pill">
+            <Wallet size={15} />
+            New {selectedType}
+          </span>
+          <h1 className="section-title mt-4">Add {selectedType === "expense" ? "Expense" : "Income"}</h1>
+          <p className="section-subtitle">Capture the amount, date, category, payment mode, and receipt in one place.</p>
+        </div>
+      </section>
+
+      <form onSubmit={handleSubmit(submitHandler)} className="app-card overflow-hidden">
+        <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[18rem_1fr]">
+          <aside className="rounded-lg bg-slate-950 p-5 text-white">
+            <p className="text-sm font-bold text-slate-300">Record Type</p>
+            <div className="mt-4 grid gap-2">
+              {["expense", "income"].map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setSelectedType(type)}
+                  className={`rounded-lg px-4 py-3 text-left font-black capitalize transition ${
+                    selectedType === type ? "bg-white text-slate-950" : "bg-white/5 text-slate-300 hover:bg-white/10"
+                  }`}
                 >
+                  {type}
+                </button>
+              ))}
+            </div>
+            <p className="mt-6 text-sm leading-6 text-slate-400">Switching type loads the matching category list automatically.</p>
+          </aside>
 
-                  <option value="">
-                    Select Category
-                  </option>
+          <div className="grid gap-5">
+            <div>
+              <label className="field-label" htmlFor="title">
+                <FileText size={16} />
+                Title
+              </label>
+              <input
+                id="title"
+                type="text"
+                placeholder="Groceries, salary, fuel..."
+                {...register("title", { required: "Title is required" })}
+                className="field-input"
+              />
+              {errors.title && <p className="mt-2 text-sm font-bold text-rose-600">{errors.title.message}</p>}
+            </div>
 
-                  {
-                    categories?.map((cat) => (
+            <div>
+              <label className="field-label" htmlFor="description">
+                <Receipt size={16} />
+                Description
+              </label>
+              <textarea id="description" rows="4" placeholder="Optional notes" {...register("description")} className="field-input resize-none" />
+            </div>
 
-                      <option
-                        key={cat._id}
-                        value={cat._id}
-                      >
-                        {cat.catName}
-                      </option>
-
-                    ))
-                  }
-
-                </select>
-
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label className="field-label" htmlFor="amount">
+                  <IndianRupee size={16} />
+                  Amount
+                </label>
+                <input
+                  id="amount"
+                  type="number"
+                  placeholder="0"
+                  {...register("amount", { required: "Amount is required" })}
+                  className="field-input"
+                />
+                {errors.amount && <p className="mt-2 text-sm font-bold text-rose-600">{errors.amount.message}</p>}
               </div>
 
               <div>
+                <label className="field-label" htmlFor="expenseDate">
+                  <CalendarDays size={16} />
+                  Date
+                </label>
+                <input id="expenseDate" type="date" {...register("expenseDate")} className="field-input" />
+              </div>
+            </div>
 
-                <label className="text-sm mb-2 text-slate-300">
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label className="field-label" htmlFor="expCat">
+                  <Tag size={16} />
+                  Category
+                </label>
+                <select id="expCat" {...register("expCat")} className="field-input">
+                  <option value="">Select category</option>
+                  {categories?.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.catName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="field-label" htmlFor="paymentMode">
+                  <CreditCard size={16} />
                   Payment Mode
                 </label>
-
-                <select
-                  {...register("paymentMode")}
-                  className="inputField w-full px-4 py-3 rounded-xl"
-                >
-
+                <select id="paymentMode" {...register("paymentMode")} className="field-input">
                   <option value="CASH">Cash</option>
-
                   <option value="CARD">Card</option>
-
                   <option value="UPI">UPI</option>
-
                   <option value="CHEQUE">Cheque</option>
-
                 </select>
-
               </div>
-
             </div>
-
-            {/* FILE */}
 
             <div>
-
-              <label className="text-sm mb-2 text-slate-300">
-                Upload Receipt
+              <label className="field-label" htmlFor="receipt">
+                <Upload size={16} />
+                Receipt
               </label>
-
-              <input
-                type="file"
-                onChange={(event) =>
-                  setSelectedFile(event.target.files[0])
-                }
-                className="inputField w-full px-4 py-3 rounded-xl"
-              />
-
+              <input id="receipt" type="file" onChange={(e) => setSelectedFile(e.target.files[0])} className="field-input" />
             </div>
 
-            {/* BUTTON */}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="submitBtn w-full py-4 rounded-xl font-semibold text-lg transition-all duration-300 disabled:opacity-50"
-            >
-
-              {
-                loading
-                  ? "Processing..."
-                  : `Add ${selectedType}`
-              }
-
+            <button type="submit" className="primary-btn w-full sm:w-auto">
+              <Save size={18} />
+              Save {selectedType === "expense" ? "Expense" : "Income"}
             </button>
-
-          </form>
-
+          </div>
         </div>
-
-      </div>
-    </>
-  )
-}
+      </form>
+    </div>
+  );
+};

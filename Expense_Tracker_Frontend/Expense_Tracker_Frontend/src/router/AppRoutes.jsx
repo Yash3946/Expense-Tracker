@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import { Login } from "../common/Login"
+import { Sigup } from "../common/Sigup"
 import { ExpenseDashboard } from "../user/ExpenseDashboard"
 import { AddCategory } from "../user/AddCategory"
 import { GetMyCategories } from "../user/GetMyCategories"
@@ -9,6 +10,7 @@ import { MyExpenses } from "../user/MyExpenses"
 import { Report } from "../user/Report"
 import { Report1 } from "../user/Report1"
 import { UserProfile } from "../user/UserProfile"
+import Budget from "../user/Budget"
 
 
 const AppRoutes = () => {
@@ -17,6 +19,10 @@ const AppRoutes = () => {
         {
             path: "/login",
             element: <Login />
+        },
+        {
+            path: "/signup",
+            element: <Sigup />
         },
         {
             path: "/",   // ✅ yaha "/" use karo
@@ -53,6 +59,10 @@ const AppRoutes = () => {
                {
                 path:"user-profile",
                 element:<UserProfile/>
+               },
+               {
+                path:"budget",
+                element:<Budget/>
                }
             ]
         }

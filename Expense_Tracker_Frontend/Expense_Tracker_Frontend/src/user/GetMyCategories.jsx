@@ -1,260 +1,141 @@
-import React, { useEffect, useState } from 'react'
-import axios from '../api/axiosInstance'
-import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useState } from "react";
+import axios from "../api/axiosInstance";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { FolderKanban, Plus, Search, Tag, Trash2 } from "lucide-react";
 
 export const GetMyCategories = () => {
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("expense");
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const [categories, setCategories] = useState([])
-  const [selectedCategory, setSelectedCategory] = useState("expense")
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
-
-  // =========================
-  // GET EXPENSE CATEGORIES
-  // =========================
   const getAllCategories = async () => {
-
     try {
-
-      const res = await axios.get("/expCat/userCategory")
-
-      if (res.data && Array.isArray(res.data.data)) {
-        setCategories(res.data.data)
-      } else {
-        setCategories([])
-      }
-
+      const res = await axios.get("/expCat/userCategory");
+      setCategories(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err) {
-      console.log(err)
-      toast.error("Failed to load expense categories ❌")
+      console.log(err);
+      toast.error("Failed to load expense categories");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  // =========================
-  // GET INCOME CATEGORIES
-  // =========================
   const getAllIncomeCategories = async () => {
-
     try {
-
-      const res = await axios.get("/incomeCat/incomeCategory")
-
-      if (res.data && Array.isArray(res.data.data)) {
-        setCategories(res.data.data)
-      } else {
-        setCategories([])
-      }
-
+      const res = await axios.get("/incomeCat/incomeCategory");
+      setCategories(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err) {
-      console.log(err)
-      toast.error("Failed to load income categories ❌")
+      console.log(err);
+      toast.error("Failed to load income categories");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  // =========================
-  // USE EFFECT
-  // =========================
   useEffect(() => {
-
+    setLoading(true);
     if (selectedCategory === "expense") {
-      getAllCategories()
+      getAllCategories();
     } else {
-      getAllIncomeCategories()
+      getAllIncomeCategories();
     }
+  }, [selectedCategory]);
 
-  }, [selectedCategory])
-
-  // =========================
-  // DELETE CATEGORY
-  // =========================
   const deleteCategory = async (id) => {
-
-    const confirmDelete = window.confirm("Are you sure ?")
-
-    if (!confirmDelete) return
+    const confirmDelete = window.confirm("Are you sure you want to delete this category?");
+    if (!confirmDelete) return;
 
     try {
-
-      // EXPENSE DELETE
       if (selectedCategory === "expense") {
-
-        await axios.delete(`/expCat/deletecat/${id}`)
-
+        await axios.delete(`/expCat/deletecat/${id}`);
       } else {
-
-        // INCOME DELETE
-        await axios.delete(`/incomeCat/deleteincomecat/${id}`)
+        await axios.delete(`/incomeCat/deleteincomecat/${id}`);
       }
 
-      // REMOVE FROM UI
-      setCategories((prev) =>
-        prev.filter((cat) => cat._id !== id)
-      )
-
-      toast.success("Category deleted successfully ✅")
-
+      setCategories((prev) => prev.filter((cat) => cat._id !== id));
+      toast.success("Category deleted successfully");
     } catch (err) {
-
-      console.log(err)
-      toast.error("Delete failed ❌")
+      console.log(err);
+      toast.error("Delete failed");
     }
-  }
+  };
+
+  const filteredCategories = categories.filter((category) =>
+    `${category.catName || ""} ${category.description || ""}`.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-
-    <div className="min-h-screen bg-[#080b14] px-4 py-10 relative overflow-hidden text-slate-200">
-
-      {/* BACKGROUND GRID */}
-      <div
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage:
-            'linear-gradient(#6366f1 1px,transparent 1px),linear-gradient(90deg,#6366f1 1px,transparent 1px)',
-          backgroundSize: '40px 40px'
-        }}
-      />
-
-      {/* GLOW */}
-      <div
-        className="absolute -top-20 -left-20 w-80 h-80 rounded-full"
-        style={{
-          background:
-            'radial-gradient(circle,rgba(99,102,241,0.15),transparent 70%)'
-        }}
-      />
-
-      <div
-        className="absolute -bottom-16 -right-10 w-64 h-64 rounded-full"
-        style={{
-          background:
-            'radial-gradient(circle,rgba(168,85,247,0.12),transparent 70%)'
-        }}
-      />
-
-      <div className="max-w-7xl mx-auto relative z-10">
-
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-10 flex-wrap gap-4">
-
-          <div>
-
-            <h1 className="text-3xl font-extrabold text-white">
-              My <span className="text-indigo-400">Categories</span>
-            </h1>
-
-            {/* SELECT */}
-            <div className="flex items-center gap-3 mt-4">
-
-              <label className="text-sm text-slate-300">
-                SELECT CATEGORY TYPE:
-              </label>
-
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-white"
-              >
-                <option value="expense">EXPENSE</option>
-                <option value="income">INCOME</option>
-              </select>
-
-            </div>
-
-            <p className="text-slate-500 text-sm mt-2">
-              Manage your categories
-            </p>
-
-          </div>
-
-          {/* RIGHT */}
-          <div className="flex items-center gap-3">
-
-            <span className="px-4 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-sm border border-indigo-500/20">
-              Total: {categories.length}
-            </span>
-
-            <button
-              onClick={() => navigate("/add-category")}
-              className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all"
-              style={{
-                background:
-                  'linear-gradient(135deg,#4f46e5,#7c3aed)'
-              }}
-            >
-              + Add
-            </button>
-
-          </div>
-
+    <div className="page-wrap space-y-6">
+      <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <span className="pill">
+            <FolderKanban size={15} />
+            {categories.length} categories
+          </span>
+          <h1 className="section-title mt-4">Categories</h1>
+          <p className="section-subtitle">Organize income and expenses into tidy groups.</p>
         </div>
+        <button type="button" onClick={() => navigate("/add-category")} className="primary-btn">
+          <Plus size={18} />
+          Add Category
+        </button>
+      </section>
 
-        {/* EMPTY STATE */}
-        {categories.length === 0 ? (
+      <section className="app-card p-4">
+        <div className="grid gap-3 md:grid-cols-[1fr_14rem]">
+          <label className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search categories"
+              className="field-input pl-10"
+            />
+          </label>
+          <select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} className="field-input">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+        </div>
+      </section>
 
-          <div className="text-center mt-20 text-slate-500">
-            No categories found 😢
-          </div>
-
-        ) : (
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-
-            {categories.map((category) => (
-
-              <div
-                key={category._id}
-                className="relative p-5 rounded-2xl border border-slate-800 backdrop-blur-lg transition-all hover:scale-[1.03]"
-                style={{
-                  background: 'rgba(15,19,35,0.85)',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.4)'
-                }}
-              >
-
-                {/* TOP GLOW */}
-                <div
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px"
-                  style={{
-                    background:
-                      'linear-gradient(90deg,transparent,rgba(99,102,241,0.6),transparent)'
-                  }}
-                />
-
-                {/* NAME */}
-                <h2 className="text-lg font-semibold text-indigo-400 mb-2">
-                  {category.catName}
-                </h2>
-
-                {/* DESCRIPTION */}
-                <p className="text-slate-400 text-sm mb-4">
-                  {category.description || "No description"}
-                </p>
-
-                {/* FOOTER */}
-                <div className="flex justify-between items-center">
-
-                  <span className="text-xs text-slate-600">
-                    ID: {category._id.slice(-5)}
-                  </span>
-
-                  <button
-                    onClick={() => deleteCategory(category._id)}
-                    className="px-3 py-1 text-xs rounded-lg bg-red-500/80 hover:bg-red-600 text-white transition"
-                  >
-                    Delete
-                  </button>
-
+      {loading ? (
+        <div className="app-card p-10 text-center font-bold text-slate-500">Loading categories...</div>
+      ) : filteredCategories.length === 0 ? (
+        <div className="app-card p-10 text-center">
+          <Tag className="mx-auto text-slate-400" size={42} />
+          <h2 className="mt-4 text-xl font-black text-slate-950">No categories found</h2>
+          <p className="mt-2 text-slate-500">Create your first category to keep records clean.</p>
+        </div>
+      ) : (
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredCategories.map((category) => (
+            <article key={category._id} className="app-card p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700">
+                    <Tag size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="truncate text-lg font-black text-slate-950">{category.catName}</h2>
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">{selectedCategory}</p>
+                  </div>
                 </div>
-
+                <button type="button" onClick={() => deleteCategory(category._id)} className="icon-btn danger-btn" aria-label="Delete category">
+                  <Trash2 size={17} />
+                </button>
               </div>
-
-            ))}
-
-          </div>
-
-        )}
-
-      </div>
+              <p className="mt-4 line-clamp-3 min-h-12 text-sm text-slate-500">{category.description || "No description added."}</p>
+              <div className="mt-5 border-t border-slate-100 pt-4 text-xs font-bold text-slate-400">ID: {category._id?.slice(-8)}</div>
+            </article>
+          ))}
+        </section>
+      )}
     </div>
-  )
-}
+  );
+};

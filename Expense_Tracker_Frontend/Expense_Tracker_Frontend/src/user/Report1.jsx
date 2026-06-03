@@ -1,213 +1,107 @@
-import React, { useEffect, useState } from 'react'
-import axiosInstance from '../api/axiosInstance'
+import React, { useEffect, useMemo, useState } from "react";
+import axiosInstance from "../api/axiosInstance";
+import { Chart as ChartJS, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from "chart.js";
+import { Bar } from "react-chartjs-2";
+import { BarChart3, CreditCard } from "lucide-react";
 
-import {
-  Chart as ChartJS,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-} from 'chart.js'
-
-import { Bar } from 'react-chartjs-2'
-
-ChartJS.register(
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement
-)
+ChartJS.register(Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 export const Report1 = () => {
-
-  const [barData, setBarData] = useState({
-    labels: [],
-    datasets: []
-  })
-
-  const [isLoading, setIsLoading] = useState(true)
+  const [barData, setBarData] = useState({ labels: [], datasets: [] });
+  const [isLoading, setIsLoading] = useState(true);
 
   const getMyExpenses = async () => {
-
     try {
-
-      const res = await axiosInstance.get(`/exp/expbyuserid`)
-
-      console.log(res.data.data)
-
+      const res = await axiosInstance.get("/exp/expbyuserid");
       if (res.data && Array.isArray(res.data.data)) {
+        const paymentData = { CASH: 0, CARD: 0, UPI: 0, CHEQUE: 0 };
 
-        const paymentData = {
-          CASH: 0,
-          CARD: 0,
-          UPI: 0,
-          CHEQUE: 0
-        }
-
-        res.data.data.map((exp) => {
-
-          const paymentMode = exp.paymentMode
-          const amount = Number(exp.amount)
-
+        res.data.data.forEach((exp) => {
+          const paymentMode = exp.paymentMode;
+          const amount = Number(exp.amount || 0);
           if (paymentData[paymentMode] !== undefined) {
-
-            paymentData[paymentMode] += amount
+            paymentData[paymentMode] += amount;
           }
-        })
+        });
 
-        console.log(paymentData)
-
-        const chartData = {
-
+        setBarData({
           labels: Object.keys(paymentData),
-
           datasets: [
             {
               label: "Payment Mode Amount",
-
               data: Object.values(paymentData),
-
-              backgroundColor: [
-                'rgba(251,191,36,0.7)',
-                'rgba(59,130,246,0.7)',
-                'rgba(168,85,247,0.7)',
-                'rgba(239,68,68,0.7)',
-              ],
-
-              borderColor: [
-                'rgba(251,191,36,1)',
-                'rgba(59,130,246,1)',
-                'rgba(168,85,247,1)',
-                'rgba(239,68,68,1)',
-              ],
-
-              borderWidth: 2,
-              borderRadius: 12,
-              barThickness: 60,
-            }
-          ]
-        }
-
-        setBarData(chartData)
+              backgroundColor: ["#f59e0b", "#0891b2", "#16a34a", "#ef4444"],
+              borderRadius: 8,
+            },
+          ],
+        });
       }
-
     } catch (err) {
-
-      console.error("Error fetching expenses", err)
-
+      console.error("Error fetching expenses", err);
     } finally {
-
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    getMyExpenses()
-  }, [])
+    getMyExpenses();
+  }, []);
+
+  const total = useMemo(() => barData.datasets?.[0]?.data?.reduce((sum, value) => sum + Number(value || 0), 0) || 0, [barData]);
 
   return (
-
-    <div
-      className="min-h-screen px-4 py-10 text-white"
-      style={{
-        background:
-          'linear-gradient(135deg,#020617,#0f172a,#111827)'
-      }}
-    >
-
-      <div className="max-w-6xl mx-auto">
-
-        {/* HEADING */}
-        <div className="text-center mb-12">
-
-          <h1 className="text-4xl font-bold mb-3">
-            Payment Mode <span className="text-indigo-400">Report</span>
-          </h1>
-
-          <p className="text-slate-400">
-            Expense analysis based on payment modes 📊
+    <div className="page-wrap space-y-6">
+      <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <span className="pill">
+            <BarChart3 size={15} />
+            Payment analysis
+          </span>
+          <h1 className="section-title mt-4">Payment Mode Report</h1>
+          <p className="section-subtitle">Compare spending across cash, card, UPI, and cheque.</p>
+        </div>
+        <div className="app-card px-5 py-4">
+          <p className="text-sm font-bold text-slate-500">Tracked Spend</p>
+          <p className="text-2xl font-black text-slate-950">
+            {total.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}
           </p>
-
         </div>
+      </section>
 
-        {/* CARD */}
-        <div
-          className="rounded-3xl p-8"
-          style={{
-            background: 'rgba(15,23,42,0.75)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            backdropFilter: 'blur(12px)'
-          }}
-        >
-
-          {isLoading ? (
-
-            <div className="text-center text-slate-400 py-20">
-              Loading Report...
-            </div>
-
-          ) : (
-
-            <div className="w-full">
-
-              <Bar
-                data={barData}
-                options={{
-                  responsive: true,
-
-                  plugins: {
-
-                    legend: {
-                      labels: {
-                        color: 'white'
-                      }
-                    }
-                  },
-
-                  scales: {
-
-                    x: {
-
-                      ticks: {
-                        color: 'white',
-                        font: {
-                          size: 14
-                        }
-                      },
-
-                      grid: {
-                        color: 'rgba(255,255,255,0.08)'
-                      }
-                    },
-
-                    y: {
-
-                      beginAtZero: true,
-
-                      ticks: {
-                        color: 'white',
-                        font: {
-                          size: 14
-                        }
-                      },
-
-                      grid: {
-                        color: 'rgba(255,255,255,0.08)'
-                      }
-                    }
-                  }
-                }}
-              />
-
-            </div>
-          )}
-
-        </div>
-
-      </div>
-
+      <section className="app-card p-5 sm:p-8">
+        {isLoading ? (
+          <div className="py-20 text-center font-bold text-slate-500">Loading report...</div>
+        ) : total === 0 ? (
+          <div className="py-20 text-center">
+            <CreditCard className="mx-auto text-slate-400" size={42} />
+            <h2 className="mt-4 text-xl font-black text-slate-950">No payment data</h2>
+            <p className="mt-2 text-slate-500">Add expenses with payment modes to generate analytics.</p>
+          </div>
+        ) : (
+          <Bar
+            data={barData}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: {
+                  labels: { color: "#334155", font: { weight: "bold" } },
+                },
+              },
+              scales: {
+                x: {
+                  ticks: { color: "#475569", font: { weight: "bold" } },
+                  grid: { color: "rgba(15, 23, 42, 0.06)" },
+                },
+                y: {
+                  beginAtZero: true,
+                  ticks: { color: "#475569", font: { weight: "bold" } },
+                  grid: { color: "rgba(15, 23, 42, 0.08)" },
+                },
+              },
+            }}
+          />
+        )}
+      </section>
     </div>
-  )
-}
+  );
+};
