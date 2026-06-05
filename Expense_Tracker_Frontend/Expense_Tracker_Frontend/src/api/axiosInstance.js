@@ -10,9 +10,9 @@ const getCookie = (name) => {
 
 // Create an Axios instance
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000', // Adjust your base URL as needed
+  baseURL: 'https://expense-tracker-e8dy.onrender.com', // Adjust your base URL as needed
 });
-
+firebase
 // Request interceptor to add the token to headers
 axiosInstance.interceptors.request.use(
   (config) => {
