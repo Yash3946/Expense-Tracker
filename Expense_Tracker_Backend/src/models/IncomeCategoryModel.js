@@ -15,15 +15,13 @@ const incomeCategorySchema = new Schema({
 
 })
 
-incomeCategorySchema.pre("findOneAndDelete", async function(next) {
+incomeCategorySchema.pre("findOneAndDelete", async function() {
     const category = await this.model.findOne(this.getFilter());
 
     if (category) {
         await mongoose.model("expense").deleteMany({
-            inc: category._id
+            incomeCategory: category._id
         });
     }
-
-    
 });
 module.exports = mongoose.model("incomeCategory",incomeCategorySchema)

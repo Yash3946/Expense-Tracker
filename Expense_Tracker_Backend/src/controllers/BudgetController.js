@@ -19,24 +19,27 @@ const CreateBudget = async (req,res)=>
     }
 }
 
-const deleteBudget = async (req,res) =>
-{
-   
- try {
-   const userId = req.user._id;
-        const deletedBudget =
-           await budgetSchema.findOneAndDelete(userId)
-           res.status(200).json({
-               message:"budget deleted successfully",
-               data: deleteBudget
-           })
-} catch (err) {
-        console.log(err)
-             res.status(500).json({
-             message:"Delete failed"
-           })
-       }
-   }
+const deleteBudget = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const deletedBudget = await budgetSchema.findOneAndDelete({ _id: req.params.id, userId: userId });
+        if (!deletedBudget) {
+            return res.status(404).json({
+                message: "Budget not found"
+            });
+        }
+        res.status(200).json({
+            message: "budget deleted successfully",
+            data: deletedBudget
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Delete failed",
+            err: err.message
+        });
+    }
+}
 
 const getBudgetsByUserId = async (req, res) => {
     try {
