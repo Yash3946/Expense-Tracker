@@ -2,8 +2,15 @@ const express = require("express")
 require("dotenv").config();
 const app = express()
 app.use(express.json())
+
 const cors = require("cors")
-app.use(cors())
+app.use(cors({
+  origin: [
+    'https://expensetracker-b5b52.web.app',
+    'https://expensetracker-b5b52.firebaseapp.com'
+  ],
+  credentials: true
+}))
 
 const userRoutes = require("./src/routes/UserRoutes")
 app.use("/user", userRoutes)
